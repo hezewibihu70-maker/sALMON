@@ -1,118 +1,402 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Дашборд проработок</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Аналитика проработок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
-    :root {
-      --bg:     var(--tg-theme-bg-color, #1c1c1e);
-      --sec:    var(--tg-theme-secondary-bg-color, #2c2c2e);
-      --text:   var(--tg-theme-text-color, #fff);
-      --hint:   var(--tg-theme-hint-color, #8e8e93);
-      --btn:    var(--tg-theme-button-color, #2f7de1);
-      --r: 12px;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    .card {
+      background: #1a1f2e;
+      border: 1px solid rgba(34,211,238,0.12);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 12px; font-size: 14px; }
 
-    h2 { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+    /* Tab bar */
+    .tab { transition: all .2s; }
+    .tab.active {
+      background: #22d3ee;
+      color: #0f1117;
+    }
 
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-    .stat-card { background: var(--sec); border-radius: var(--r); padding: 12px 8px; text-align: center; }
-    .stat-num  { font-size: 26px; font-weight: 700; }
-    .stat-lbl  { font-size: 11px; color: var(--hint); margin-top: 2px; }
+    /* Stat cards */
+    .stat-accent { border-color: rgba(34,211,238,0.35); }
+    .stat-ok     { border-color: rgba(52,211,153,0.35); }
+    .stat-bad    { border-color: rgba(248,113,113,0.35); }
+    .stat-warn   { border-color: rgba(251,191,36,0.35); }
+    .stat-purple { border-color: rgba(167,139,250,0.35); }
 
-    .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-    .filter-btn { background: var(--sec); color: var(--text); border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
-    .filter-btn.active { background: var(--btn); color: #fff; }
+    /* Badges */
+    .badge-ok   { background: rgba(52,211,153,.15); color: #34d399; }
+    .badge-no   { background: rgba(248,113,113,.15); color: #f87171; }
+    .badge-wp   { background: rgba(251,191,36,.15);  color: #fbbf24; }
+    .badge-open { background: rgba(34,211,238,.15);  color: #22d3ee; }
+    .badge-proc { background: rgba(167,139,250,.15); color: #a78bfa; }
 
-    .search-box { width: 100%; background: var(--sec); border: none; border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 14px; margin-bottom: 12px; outline: none; }
+    /* Bar chart */
+    .bar-track { background: rgba(255,255,255,0.07); border-radius: 999px; height: 8px; overflow: hidden; }
+    .bar-fill  { height: 8px; border-radius: 999px; transition: width .6s cubic-bezier(.4,0,.2,1); }
 
-    .item { background: var(--sec); border-radius: var(--r); padding: 12px; margin-bottom: 8px; }
-    .item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    .item-num  { font-weight: 600; font-size: 13px; }
-    .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
-    .badge-ok  { background: rgba(52,199,89,.2);  color: #34c759; }
-    .badge-no  { background: rgba(255,59,48,.2);  color: #ff3b30; }
-    .badge-wp  { background: rgba(255,159,10,.2); color: #ff9f0a; }
-    .badge-op  { background: rgba(47,125,225,.2); color: #2f7de1; }
+    /* Donut SVG */
+    .donut-ring { fill: none; stroke-width: 18; }
+    .donut-bg   { stroke: rgba(255,255,255,0.07); }
 
-    .item-sup  { color: var(--hint); font-size: 12px; margin-bottom: 4px; }
-    .item-nom  { font-size: 13px; margin-bottom: 6px; }
-    .item-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--hint); }
-    .item a    { color: var(--btn); text-decoration: none; font-size: 12px; }
+    /* Search */
+    .search-inp {
+      background: #12161f;
+      border: 1px solid #334155;
+      color: #e0e4ed;
+      border-radius: 1rem;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      width: 100%;
+      outline: none;
+      font-size: 0.875rem;
+      transition: border-color .2s;
+    }
+    .search-inp:focus { border-color: #22d3ee; }
 
-    .empty { text-align: center; color: var(--hint); padding: 40px 0; font-size: 15px; }
-    .loading { text-align: center; color: var(--hint); padding: 40px 0; }
+    /* List item */
+    .list-item { background: #1a1f2e; border: 1px solid rgba(34,211,238,0.08); transition: border-color .15s; }
+    .list-item:hover { border-color: rgba(34,211,238,0.3); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 4px; }
   </style>
 </head>
-<body>
-  <h2>📊 Все проработки</h2>
+<body class="bg-[#0f1117] text-[#e0e4ed] min-h-screen">
 
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Всего</div></div>
-    <div class="stat-card"><div class="stat-num" id="s-open">—</div><div class="stat-lbl">Открытых</div></div>
-    <div class="stat-card"><div class="stat-num" id="s-over">—</div><div class="stat-lbl">Просрочено</div></div>
+  <!-- ── HEADER ── -->
+  <div class="sticky top-0 z-50 bg-[#0f1117] border-b border-[#22d3ee]/20 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i class="fa-solid fa-chart-pie text-[#22d3ee] text-xl"></i>
+      <div>
+        <div class="font-semibold leading-tight">studyBOTML</div>
+        <div class="text-[10px] text-[#a0a8c0]">Аналитика проработок</div>
+      </div>
+    </div>
+    <div class="text-xs text-[#a0a8c0]" id="h-total">—</div>
   </div>
 
-  <input class="search-box" id="search" placeholder="🔍 Поиск по поставщику, номеру…" />
-
-  <div class="filters" id="filters">
-    <button class="filter-btn active" data-f="all">Все</button>
-    <button class="filter-btn" data-f="open">Открытые</button>
-    <button class="filter-btn" data-f="ok">Одобрено</button>
-    <button class="filter-btn" data-f="no">Отклонено</button>
-    <button class="filter-btn" data-f="overdue">Просрочено</button>
+  <!-- ── TAB BAR ── -->
+  <div class="flex gap-2 px-4 pt-4 pb-2">
+    <button class="tab active flex-1 py-2 rounded-2xl text-sm font-semibold" data-tab="analytics" onclick="switchTab('analytics')">
+      <i class="fa-solid fa-chart-column mr-1"></i>Аналитика
+    </button>
+    <button class="tab flex-1 py-2 rounded-2xl text-sm font-semibold text-[#a0a8c0]" data-tab="list" onclick="switchTab('list')">
+      <i class="fa-solid fa-list mr-1"></i>Список
+    </button>
   </div>
 
-  <div id="list"><div class="loading">Загрузка…</div></div>
+  <!-- ══════════ TAB: АНАЛИТИКА ══════════ -->
+  <div id="tab-analytics" class="px-4 pb-8 space-y-4">
+
+    <!-- Big stats row -->
+    <div class="grid grid-cols-2 gap-3 mt-1">
+      <div class="card stat-accent rounded-2xl p-4 col-span-2 flex items-center justify-between">
+        <div>
+          <div class="text-3xl font-bold" id="a-total">—</div>
+          <div class="text-xs text-[#a0a8c0] mt-0.5">Всего заявок</div>
+        </div>
+        <div class="text-right space-y-1">
+          <div class="text-sm"><span class="text-[#34d399] font-semibold" id="a-closed">—</span> <span class="text-[#a0a8c0]">закрыто</span></div>
+          <div class="text-sm"><span class="text-[#22d3ee] font-semibold" id="a-open">—</span> <span class="text-[#a0a8c0]">открыто</span></div>
+          <div class="text-sm"><span class="text-[#f87171] font-semibold" id="a-overdue">—</span> <span class="text-[#a0a8c0]">просрочено</span></div>
+        </div>
+      </div>
+
+      <div class="card stat-ok rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-[#34d399]" id="a-ok">—</div>
+        <div class="text-xs text-[#a0a8c0] mt-1">Одобрено</div>
+        <div class="text-[10px] text-[#34d399] mt-1" id="a-ok-pct">—%</div>
+      </div>
+      <div class="card stat-bad rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-[#f87171]" id="a-no">—</div>
+        <div class="text-xs text-[#a0a8c0] mt-1">Отклонено</div>
+        <div class="text-[10px] text-[#f87171] mt-1" id="a-no-pct">—%</div>
+      </div>
+      <div class="card stat-warn rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-[#fbbf24]" id="a-wp">—</div>
+        <div class="text-xs text-[#a0a8c0] mt-1">Доработка</div>
+        <div class="text-[10px] text-[#fbbf24] mt-1" id="a-wp-pct">—%</div>
+      </div>
+      <div class="card stat-purple rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-[#a78bfa]" id="a-proc">—</div>
+        <div class="text-xs text-[#a0a8c0] mt-1">В процессе</div>
+        <div class="text-[10px] text-[#a78bfa] mt-1" id="a-proc-pct">—%</div>
+      </div>
+    </div>
+
+    <!-- Конверсия + SLA -->
+    <div class="grid grid-cols-2 gap-3">
+      <!-- Конверсия одобрения -->
+      <div class="card rounded-2xl p-4 flex flex-col items-center">
+        <div class="text-xs text-[#a0a8c0] mb-3 self-start">Конверсия</div>
+        <svg viewBox="0 0 80 80" class="w-20 h-20">
+          <circle class="donut-ring donut-bg" cx="40" cy="40" r="31"/>
+          <circle class="donut-ring" id="donut-ok" cx="40" cy="40" r="31"
+                  stroke="#34d399" stroke-dasharray="0 195"
+                  stroke-linecap="round" transform="rotate(-90 40 40)"/>
+        </svg>
+        <div class="text-xl font-bold text-[#34d399] mt-1" id="conv-pct">—</div>
+        <div class="text-[10px] text-[#a0a8c0]">одобрено из закрытых</div>
+      </div>
+      <!-- SLA -->
+      <div class="card rounded-2xl p-4 flex flex-col items-center">
+        <div class="text-xs text-[#a0a8c0] mb-3 self-start">SLA в срок</div>
+        <svg viewBox="0 0 80 80" class="w-20 h-20">
+          <circle class="donut-ring donut-bg" cx="40" cy="40" r="31"/>
+          <circle class="donut-ring" id="donut-sla" cx="40" cy="40" r="31"
+                  stroke="#22d3ee" stroke-dasharray="0 195"
+                  stroke-linecap="round" transform="rotate(-90 40 40)"/>
+        </svg>
+        <div class="text-xl font-bold text-[#22d3ee] mt-1" id="sla-pct">—</div>
+        <div class="text-[10px] text-[#a0a8c0]">закрыто без просрочки</div>
+      </div>
+    </div>
+
+    <!-- Распределение по результатам (бары) -->
+    <div class="card rounded-2xl p-4">
+      <div class="text-xs text-[#a0a8c0] uppercase tracking-wide mb-4 font-semibold">Результаты</div>
+      <div class="space-y-3" id="result-bars"></div>
+    </div>
+
+    <!-- Топ поставщиков -->
+    <div class="card rounded-2xl p-4">
+      <div class="text-xs text-[#a0a8c0] uppercase tracking-wide mb-4 font-semibold">
+        Топ поставщиков
+        <span class="ml-1 text-[#22d3ee]" id="sup-count"></span>
+      </div>
+      <div class="space-y-3" id="supplier-bars"></div>
+    </div>
+
+    <!-- Динамика по месяцам -->
+    <div class="card rounded-2xl p-4">
+      <div class="text-xs text-[#a0a8c0] uppercase tracking-wide mb-4 font-semibold">Динамика по месяцам</div>
+      <div id="month-chart" class="flex items-end gap-2 h-28 overflow-x-auto pb-1"></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ TAB: СПИСОК ══════════ -->
+  <div id="tab-list" class="px-4 pb-8 hidden">
+
+    <!-- Search -->
+    <div class="relative mt-2 mb-3">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0a8c0] text-xs"></i>
+      <input class="search-inp" id="search" placeholder="Поиск по поставщику, номеру…">
+    </div>
+
+    <!-- Filter chips -->
+    <div class="flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
+      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#22d3ee] text-[#0f1117]" data-f="all">Все</button>
+      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="open">Открытые</button>
+      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="ok">Одобрено</button>
+      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="no">Отклонено</button>
+      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="overdue">Просрочено</button>
+    </div>
+
+    <div id="list-container"></div>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand(); tg.ready();
 
-    const TRACKER_ID = '1IWnJLn3GreStly3Y-WQs-nuhnphuhsjnMxbx8usyyOU';
-    const API_KEY    = '';  // оставить пустым — данные придут через URL-параметры
-
-    // Данные передаются из бота через URL-параметры как JSON base64
+    // ── Данные из URL ─────────────────────────────────────────────────────
     const params  = new URLSearchParams(window.location.search);
     const rawData = params.get('data');
+    let allRows   = [];
 
-    let allRows = [];
+    // ── Утилиты ───────────────────────────────────────────────────────────
+    const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+    function parseDate(s) {
+      if (!s) return null;
+      const [d,m,y] = s.split('.');
+      if (!d || !m || !y) return null;
+      return new Date(+y, +m - 1, +d);
+    }
+
+    function isOverdue(r) {
+      const slaD = parseDate(r.sla);
+      return slaD && slaD < new Date() && !r.url;
+    }
+
+    function classifyResult(res) {
+      if (!res) return 'open';
+      const r = res.toLowerCase();
+      if (r.includes('одобр'))   return 'ok';
+      if (r.includes('откло'))   return 'no';
+      if (r.includes('доработ')) return 'wp';
+      if (r.includes('процесс')) return 'proc';
+      return 'other';
+    }
+
+    function badge(res) {
+      const c = classifyResult(res);
+      const map = {
+        ok:    ['badge-ok',   '✅ Одобрено'],
+        no:    ['badge-no',   '❌ Отклонено'],
+        wp:    ['badge-wp',   '⚠️ Доработка'],
+        proc:  ['badge-proc', '🔄 В процессе'],
+        open:  ['badge-open', '📂 Открыта'],
+        other: ['badge-open', res || '—'],
+      };
+      const [cls, label] = map[c] || map.open;
+      return `<span class="${cls} text-[10px] font-semibold px-2 py-0.5 rounded-full">${label}</span>`;
+    }
+
+    function pct(n, total) {
+      if (!total) return '0%';
+      return Math.round(n / total * 100) + '%';
+    }
+
+    function donutSet(id, fraction, color) {
+      const circ = 2 * Math.PI * 31; // 194.8
+      const dash = (fraction * circ).toFixed(1);
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+    }
+
+    // ── Аналитика ─────────────────────────────────────────────────────────
+    function buildAnalytics() {
+      const total    = allRows.length;
+      const closed   = allRows.filter(r => !!r.url).length;
+      const open     = total - closed;
+      const overdue  = allRows.filter(r => isOverdue(r)).length;
+      const nOk      = allRows.filter(r => classifyResult(r.result) === 'ok').length;
+      const nNo      = allRows.filter(r => classifyResult(r.result) === 'no').length;
+      const nWp      = allRows.filter(r => classifyResult(r.result) === 'wp').length;
+      const nProc    = allRows.filter(r => classifyResult(r.result) === 'proc').length;
+
+      // Header
+      document.getElementById('h-total').textContent = total + ' заявок';
+
+      // Big numbers
+      document.getElementById('a-total').textContent   = total;
+      document.getElementById('a-closed').textContent  = closed;
+      document.getElementById('a-open').textContent    = open;
+      document.getElementById('a-overdue').textContent = overdue;
+      document.getElementById('a-ok').textContent      = nOk;
+      document.getElementById('a-no').textContent      = nNo;
+      document.getElementById('a-wp').textContent      = nWp;
+      document.getElementById('a-proc').textContent    = nProc;
+      document.getElementById('a-ok-pct').textContent  = pct(nOk, total);
+      document.getElementById('a-no-pct').textContent  = pct(nNo, total);
+      document.getElementById('a-wp-pct').textContent  = pct(nWp, total);
+      document.getElementById('a-proc-pct').textContent = pct(nProc, total);
+
+      // Конверсия
+      const convFrac = closed ? nOk / closed : 0;
+      document.getElementById('conv-pct').textContent = pct(nOk, closed || 1);
+      donutSet('donut-ok', convFrac, '#34d399');
+
+      // SLA: закрытых без просрочки при закрытии
+      const closedRows   = allRows.filter(r => !!r.url);
+      const slaOnTime    = closedRows.filter(r => {
+        const slaD = parseDate(r.sla);
+        if (!slaD) return true; // нет SLA — считаем ок
+        return slaD >= new Date();
+      }).length;
+      const slaFrac = closedRows.length ? slaOnTime / closedRows.length : 0;
+      document.getElementById('sla-pct').textContent = pct(slaOnTime, closedRows.length || 1);
+      donutSet('donut-sla', slaFrac, '#22d3ee');
+
+      // Bars — результаты
+      const resultItems = [
+        { label: 'Одобрено',    n: nOk,   color: '#34d399' },
+        { label: 'Отклонено',   n: nNo,   color: '#f87171' },
+        { label: 'Доработка',   n: nWp,   color: '#fbbf24' },
+        { label: 'В процессе',  n: nProc, color: '#a78bfa' },
+        { label: 'Открытые',    n: open - nProc,  color: '#22d3ee' },
+      ].filter(x => x.n > 0);
+      const maxR = Math.max(...resultItems.map(x => x.n), 1);
+
+      document.getElementById('result-bars').innerHTML = resultItems.map(x => `
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-[#e0e4ed]">${x.label}</span>
+            <span class="text-[#a0a8c0]">${x.n} · ${pct(x.n, total)}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.round(x.n/maxR*100)}%; background:${x.color}"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Bars — поставщики
+      const supMap = {};
+      allRows.forEach(r => {
+        const s = (r.supplier || '—').trim();
+        supMap[s] = (supMap[s] || 0) + 1;
+      });
+      const suppliers = Object.entries(supMap).sort((a,b)=>b[1]-a[1]).slice(0, 7);
+      const maxS = suppliers[0]?.[1] || 1;
+      document.getElementById('sup-count').textContent = '(' + Object.keys(supMap).length + ')';
+
+      document.getElementById('supplier-bars').innerHTML = suppliers.map(([sup, n]) => `
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-[#e0e4ed] truncate max-w-[70%]">${sup}</span>
+            <span class="text-[#a0a8c0]">${n} заявок</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.round(n/maxS*100)}%; background:#22d3ee"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Динамика по месяцам
+      const monthMap = {};
+      allRows.forEach(r => {
+        const d = parseDate(r.date);
+        if (!d) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        if (!monthMap[key]) monthMap[key] = { ok:0, no:0, other:0, label: MONTHS[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) };
+        const cls = classifyResult(r.result);
+        if (cls==='ok') monthMap[key].ok++;
+        else if (cls==='no') monthMap[key].no++;
+        else monthMap[key].other++;
+      });
+      const months = Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
+      const maxM   = Math.max(...months.map(([,v]) => v.ok + v.no + v.other), 1);
+
+      document.getElementById('month-chart').innerHTML = months.map(([key, v]) => {
+        const ttl = v.ok + v.no + v.other;
+        const h   = Math.max(Math.round(ttl / maxM * 96), 4);
+        return `
+          <div class="flex flex-col items-center gap-1 flex-shrink-0" style="min-width:32px">
+            <div class="text-[9px] text-[#a0a8c0]">${ttl}</div>
+            <div class="w-7 rounded-t-md overflow-hidden flex flex-col-reverse" style="height:${h}px">
+              <div style="height:${Math.round(v.ok/ttl*100)}%; background:#34d399; flex-shrink:0"></div>
+              <div style="height:${Math.round(v.no/ttl*100)}%; background:#f87171; flex-shrink:0"></div>
+              <div style="height:${Math.round(v.other/ttl*100)}%; background:#22d3ee; flex-shrink:0"></div>
+            </div>
+            <div class="text-[9px] text-[#a0a8c0] text-center leading-tight">${v.label}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Список ────────────────────────────────────────────────────────────
     let curFilter = 'all';
     let curSearch = '';
 
-    function badge(res) {
-      if (!res) return '<span class="badge badge-op">Открыта</span>';
-      const r = res.toLowerCase();
-      if (r.includes('одобр')) return '<span class="badge badge-ok">✅ Одобрено</span>';
-      if (r.includes('откло')) return '<span class="badge badge-no">❌ Отклонено</span>';
-      if (r.includes('доработ')) return '<span class="badge badge-wp">⚠️ Доработка</span>';
-      return `<span class="badge badge-op">${res}</span>`;
-    }
-
-    function isOverdue(sla) {
-      if (!sla) return false;
-      const [d,m,y] = sla.split('.');
-      if (!d) return false;
-      return new Date(`${y}-${m}-${d}`) < new Date();
-    }
-
-    function render() {
-      const today = new Date();
+    function renderList() {
       let rows = allRows.filter(r => {
-        const f = curFilter;
-        const res = (r.result || '').toLowerCase();
+        const c = classifyResult(r.result);
         const hasAct = !!r.url;
-        if (f === 'open')    return !hasAct;
-        if (f === 'ok')      return res.includes('одобр');
-        if (f === 'no')      return res.includes('откло');
-        if (f === 'overdue') return !hasAct && isOverdue(r.sla);
+        if (curFilter === 'open')    return !hasAct;
+        if (curFilter === 'ok')      return c === 'ok';
+        if (curFilter === 'no')      return c === 'no';
+        if (curFilter === 'overdue') return isOverdue(r);
         return true;
       });
-
       if (curSearch) {
         const q = curSearch.toLowerCase();
         rows = rows.filter(r =>
@@ -122,61 +406,74 @@
         );
       }
 
-      const list = document.getElementById('list');
-      if (!rows.length) { list.innerHTML = '<div class="empty">Ничего не найдено</div>'; return; }
+      const el = document.getElementById('list-container');
+      if (!rows.length) {
+        el.innerHTML = '<div class="text-center text-[#a0a8c0] py-16 text-sm">Ничего не найдено</div>';
+        return;
+      }
 
-      list.innerHTML = rows.slice(0, 100).map(r => `
-        <div class="item">
-          <div class="item-head">
-            <span class="item-num">${r.num || '—'}</span>
+      el.innerHTML = rows.slice(0, 100).map(r => `
+        <div class="list-item rounded-2xl p-4 mb-2">
+          <div class="flex items-start justify-between mb-2">
+            <span class="font-semibold text-sm">${r.num || '—'}</span>
             ${badge(r.result)}
           </div>
-          <div class="item-sup">${r.supplier || '—'} ${r.sla && isOverdue(r.sla) && !r.url ? ' 🔴 Просрочено (SLA '+r.sla+')' : r.sla ? '· SLA '+r.sla : ''}</div>
-          <div class="item-nom">${r.nom || '—'}</div>
-          <div class="item-foot">
-            <span>${r.date || ''}</span>
-            ${r.url ? `<a href="${r.url}" target="_blank">📄 Открыть акт</a>` : '<span>Нет акта</span>'}
+          <div class="text-xs text-[#a0a8c0] mb-1">${r.supplier || '—'}</div>
+          <div class="text-sm mb-3 leading-snug">${r.nom || '—'}</div>
+          <div class="flex items-center justify-between text-xs text-[#a0a8c0]">
+            <div class="flex items-center gap-2">
+              <span>${r.date || ''}</span>
+              ${r.sla ? `<span class="${isOverdue(r) ? 'text-[#f87171]' : ''}">· SLA ${r.sla}${isOverdue(r) ? ' 🔴' : ''}</span>` : ''}
+            </div>
+            ${r.url
+              ? `<a href="${r.url}" target="_blank" class="text-[#22d3ee] font-medium">📄 Акт</a>`
+              : `<span class="text-[#a0a8c0]">Нет акта</span>`}
           </div>
         </div>
       `).join('');
     }
 
-    function updateStats() {
-      const today = new Date();
-      document.getElementById('s-total').textContent = allRows.length;
-      document.getElementById('s-open').textContent  = allRows.filter(r => !r.url).length;
-      document.getElementById('s-over').textContent  = allRows.filter(r => !r.url && isOverdue(r.sla)).length;
+    // Кнопки-чипы
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(b => {
+          b.className = 'filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]';
+        });
+        btn.className = 'filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#22d3ee] text-[#0f1117]';
+        curFilter = btn.dataset.f;
+        renderList();
+      });
+    });
+
+    document.getElementById('search').addEventListener('input', e => {
+      curSearch = e.target.value.trim();
+      renderList();
+    });
+
+    // ── Tab switching ─────────────────────────────────────────────────────
+    function switchTab(t) {
+      document.querySelectorAll('.tab').forEach(b => {
+        const active = b.dataset.tab === t;
+        b.className = `tab flex-1 py-2 rounded-2xl text-sm font-semibold ${active ? 'bg-[#22d3ee] text-[#0f1117] active' : 'text-[#a0a8c0]'}`;
+      });
+      document.getElementById('tab-analytics').classList.toggle('hidden', t !== 'analytics');
+      document.getElementById('tab-list').classList.toggle('hidden', t !== 'list');
     }
 
-    // Загружаем данные из URL-параметра (бот передаёт их при открытии)
+    // ── Загрузка данных ───────────────────────────────────────────────────
     if (rawData) {
       try {
         allRows = JSON.parse(decodeURIComponent(rawData));
-        updateStats();
-        render();
+        buildAnalytics();
+        renderList();
       } catch(e) {
-        document.getElementById('list').innerHTML = '<div class="empty">Ошибка загрузки данных</div>';
+        document.getElementById('tab-analytics').innerHTML =
+          '<div class="text-center text-[#f87171] py-16 text-sm px-4">Ошибка разбора данных</div>';
       }
     } else {
-      document.getElementById('list').innerHTML =
-        '<div class="empty">Данные не переданы.<br>Откройте через бота командой /dashboard</div>';
+      document.getElementById('tab-analytics').innerHTML =
+        '<div class="text-center text-[#a0a8c0] py-16 text-sm px-4">Данные не переданы.<br>Откройте через бота: /dashboard</div>';
     }
-
-    // Фильтры
-    document.getElementById('filters').addEventListener('click', e => {
-      const btn = e.target.closest('[data-f]');
-      if (!btn) return;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      curFilter = btn.dataset.f;
-      render();
-    });
-
-    // Поиск
-    document.getElementById('search').addEventListener('input', e => {
-      curSearch = e.target.value.trim();
-      render();
-    });
   </script>
 </body>
 </html>
