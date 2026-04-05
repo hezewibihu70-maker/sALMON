@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Дашборд проработок</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg:     var(--tg-theme-bg-color, #1c1c1e);
+      --sec:    var(--tg-theme-secondary-bg-color, #2c2c2e);
+      --text:   var(--tg-theme-text-color, #fff);
+      --hint:   var(--tg-theme-hint-color, #8e8e93);
+      --btn:    var(--tg-theme-button-color, #2f7de1);
+      --r: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 12px; font-size: 14px; }
+
+    h2 { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat-card { background: var(--sec); border-radius: var(--r); padding: 12px 8px; text-align: center; }
+    .stat-num  { font-size: 26px; font-weight: 700; }
+    .stat-lbl  { font-size: 11px; color: var(--hint); margin-top: 2px; }
+
+    .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-btn { background: var(--sec); color: var(--text); border: none; border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
+    .filter-btn.active { background: var(--btn); color: #fff; }
+
+    .search-box { width: 100%; background: var(--sec); border: none; border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 14px; margin-bottom: 12px; outline: none; }
+
+    .item { background: var(--sec); border-radius: var(--r); padding: 12px; margin-bottom: 8px; }
+    .item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .item-num  { font-weight: 600; font-size: 13px; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+    .badge-ok  { background: rgba(52,199,89,.2);  color: #34c759; }
+    .badge-no  { background: rgba(255,59,48,.2);  color: #ff3b30; }
+    .badge-wp  { background: rgba(255,159,10,.2); color: #ff9f0a; }
+    .badge-op  { background: rgba(47,125,225,.2); color: #2f7de1; }
+
+    .item-sup  { color: var(--hint); font-size: 12px; margin-bottom: 4px; }
+    .item-nom  { font-size: 13px; margin-bottom: 6px; }
+    .item-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--hint); }
+    .item a    { color: var(--btn); text-decoration: none; font-size: 12px; }
+
+    .empty { text-align: center; color: var(--hint); padding: 40px 0; font-size: 15px; }
+    .loading { text-align: center; color: var(--hint); padding: 40px 0; }
+  </style>
+</head>
+<body>
+  <h2>📊 Все проработки</h2>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Всего</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-open">—</div><div class="stat-lbl">Открытых</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-over">—</div><div class="stat-lbl">Просрочено</div></div>
+  </div>
+
+  <input class="search-box" id="search" placeholder="🔍 Поиск по поставщику, номеру…" />
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-f="all">Все</button>
+    <button class="filter-btn" data-f="open">Открытые</button>
+    <button class="filter-btn" data-f="ok">Одобрено</button>
+    <button class="filter-btn" data-f="no">Отклонено</button>
+    <button class="filter-btn" data-f="overdue">Просрочено</button>
+  </div>
+
+  <div id="list"><div class="loading">Загрузка…</div></div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); tg.ready();
+
+    const TRACKER_ID = '1IWnJLn3GreStly3Y-WQs-nuhnphuhsjnMxbx8usyyOU';
+    const API_KEY    = '';  // оставить пустым — данные придут через URL-параметры
+
+    // Данные передаются из бота через URL-параметры как JSON base64
+    const params  = new URLSearchParams(window.location.search);
+    const rawData = params.get('data');
+
+    let allRows = [];
+    let curFilter = 'all';
+    let curSearch = '';
+
+    function badge(res) {
+      if (!res) return '<span class="badge badge-op">Открыта</span>';
+      const r = res.toLowerCase();
+      if (r.includes('одобр')) return '<span class="badge badge-ok">✅ Одобрено</span>';
+      if (r.includes('откло')) return '<span class="badge badge-no">❌ Отклонено</span>';
+      if (r.includes('доработ')) return '<span class="badge badge-wp">⚠️ Доработка</span>';
+      return `<span class="badge badge-op">${res}</span>`;
+    }
+
+    function isOverdue(sla) {
+      if (!sla) return false;
+      const [d,m,y] = sla.split('.');
+      if (!d) return false;
+      return new Date(`${y}-${m}-${d}`) < new Date();
+    }
+
+    function render() {
+      const today = new Date();
+      let rows = allRows.filter(r => {
+        const f = curFilter;
+        const res = (r.result || '').toLowerCase();
+        const hasAct = !!r.url;
+        if (f === 'open')    return !hasAct;
+        if (f === 'ok')      return res.includes('одобр');
+        if (f === 'no')      return res.includes('откло');
+        if (f === 'overdue') return !hasAct && isOverdue(r.sla);
+        return true;
+      });
+
+      if (curSearch) {
+        const q = curSearch.toLowerCase();
+        rows = rows.filter(r =>
+          (r.supplier||'').toLowerCase().includes(q) ||
+          (r.num||'').toLowerCase().includes(q) ||
+          (r.nom||'').toLowerCase().includes(q)
+        );
+      }
+
+      const list = document.getElementById('list');
+      if (!rows.length) { list.innerHTML = '<div class="empty">Ничего не найдено</div>'; return; }
+
+      list.innerHTML = rows.slice(0, 100).map(r => `
+        <div class="item">
+          <div class="item-head">
+            <span class="item-num">${r.num || '—'}</span>
+            ${badge(r.result)}
+          </div>
+          <div class="item-sup">${r.supplier || '—'} ${r.sla && isOverdue(r.sla) && !r.url ? ' 🔴 Просрочено (SLA '+r.sla+')' : r.sla ? '· SLA '+r.sla : ''}</div>
+          <div class="item-nom">${r.nom || '—'}</div>
+          <div class="item-foot">
+            <span>${r.date || ''}</span>
+            ${r.url ? `<a href="${r.url}" target="_blank">📄 Открыть акт</a>` : '<span>Нет акта</span>'}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStats() {
+      const today = new Date();
+      document.getElementById('s-total').textContent = allRows.length;
+      document.getElementById('s-open').textContent  = allRows.filter(r => !r.url).length;
+      document.getElementById('s-over').textContent  = allRows.filter(r => !r.url && isOverdue(r.sla)).length;
+    }
+
+    // Загружаем данные из URL-параметра (бот передаёт их при открытии)
+    if (rawData) {
+      try {
+        allRows = JSON.parse(decodeURIComponent(rawData));
+        updateStats();
+        render();
+      } catch(e) {
+        document.getElementById('list').innerHTML = '<div class="empty">Ошибка загрузки данных</div>';
+      }
+    } else {
+      document.getElementById('list').innerHTML =
+        '<div class="empty">Данные не переданы.<br>Откройте через бота командой /dashboard</div>';
+    }
+
+    // Фильтры
+    document.getElementById('filters').addEventListener('click', e => {
+      const btn = e.target.closest('[data-f]');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      curFilter = btn.dataset.f;
+      render();
+    });
+
+    // Поиск
+    document.getElementById('search').addEventListener('input', e => {
+      curSearch = e.target.value.trim();
+      render();
+    });
+  </script>
+</body>
+</html>
