@@ -1,478 +1,1054 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Аналитика проработок</title>
+  <title>Много лосося — аналитика проработок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', system-ui, sans-serif; }
+    :root {
+      --bg: #fff5ec;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-strong: #fffdf8;
+      --ink: #2a241f;
+      --muted: #7c6757;
+      --line: rgba(255, 117, 34, 0.14);
+      --brand: #ff6b1a;
+      --brand-deep: #ff4d00;
+      --brand-soft: #ffe0d0;
+      --ok: #2f9a63;
+      --no: #d85b44;
+      --warn: #e79a2f;
+      --proc: #9f6aff;
+      --shadow: 0 18px 40px rgba(111, 61, 28, 0.12);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(255, 108, 28, 0.36), transparent 22rem),
+        radial-gradient(circle at bottom left, rgba(255, 179, 130, 0.54), transparent 18rem),
+        linear-gradient(180deg, #fffaf5 0%, #fff1e6 100%);
+      padding: 18px 16px 36px;
+    }
+
+    .page-shell {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero {
+      position: sticky;
+      top: 12px;
+      z-index: 20;
+      overflow: hidden;
+      border-radius: 34px;
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      background:
+        radial-gradient(circle at 84% 18%, rgba(255, 113, 35, 0.92), transparent 20%),
+        radial-gradient(circle at 100% 0%, rgba(255, 169, 120, 0.62), transparent 24%),
+        linear-gradient(135deg, #fffdf9 0%, #fff5eb 100%);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .brand-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      color: #fff;
+      font: 800 17px/1 "Rubik", sans-serif;
+      box-shadow: 0 14px 24px rgba(255, 107, 26, 0.28);
+    }
+
+    .brand-copy strong,
+    .hero h1,
+    .section-title,
+    .tab {
+      font-family: "Rubik", sans-serif;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.05;
+    }
+
+    .brand-copy span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 0.95;
+      max-width: 12ch;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 42ch;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 15px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      box-shadow: 0 0 0 6px rgba(255, 107, 26, 0.11);
+    }
+
+    .hero-art {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: 220px;
+    }
+
+    .kawaii {
+      width: 70px;
+      height: 70px;
+      padding: 8px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(255, 117, 34, 0.18);
+      box-shadow: 0 18px 28px rgba(255, 107, 26, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .tab {
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      background: rgba(255,255,255,0.78);
+      color: var(--muted);
+      border-radius: 999px;
+      min-height: 52px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .tab:not(.active):hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 117, 34, 0.28);
+    }
+
+    .panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .hidden { display: none !important; }
 
     .card {
-      background: #1a1f2e;
-      border: 1px solid rgba(34,211,238,0.12);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(14px);
     }
 
-    /* Tab bar */
-    .tab { transition: all .2s; }
-    .tab.active {
-      background: #22d3ee;
-      color: #0f1117;
+    .card.highlight {
+      background:
+        radial-gradient(circle at top right, rgba(255, 107, 26, 0.09), transparent 35%),
+        var(--surface-strong);
     }
 
-    /* Stat cards */
-    .stat-accent { border-color: rgba(34,211,238,0.35); }
-    .stat-ok     { border-color: rgba(52,211,153,0.35); }
-    .stat-bad    { border-color: rgba(248,113,113,0.35); }
-    .stat-warn   { border-color: rgba(251,191,36,0.35); }
-    .stat-purple { border-color: rgba(167,139,250,0.35); }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
 
-    /* Badges */
-    .badge-ok   { background: rgba(52,211,153,.15); color: #34d399; }
-    .badge-no   { background: rgba(248,113,113,.15); color: #f87171; }
-    .badge-wp   { background: rgba(251,191,36,.15);  color: #fbbf24; }
-    .badge-open { background: rgba(34,211,238,.15);  color: #22d3ee; }
-    .badge-proc { background: rgba(167,139,250,.15); color: #a78bfa; }
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 107, 26, 0.08);
+      border: 1px solid rgba(255, 107, 26, 0.13);
+      color: var(--brand-deep);
+      font-size: 13px;
+      font-weight: 800;
+    }
 
-    /* Bar chart */
-    .bar-track { background: rgba(255,255,255,0.07); border-radius: 999px; height: 8px; overflow: hidden; }
-    .bar-fill  { height: 8px; border-radius: 999px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+    .kicker-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      color: #fff;
+      font: 700 13px/1 "Rubik", sans-serif;
+    }
 
-    /* Donut SVG */
-    .donut-ring { fill: none; stroke-width: 18; }
-    .donut-bg   { stroke: rgba(255,255,255,0.07); }
+    .section-title {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1;
+    }
 
-    /* Search */
-    .search-inp {
-      background: #12161f;
-      border: 1px solid #334155;
-      color: #e0e4ed;
-      border-radius: 1rem;
-      padding: 0.75rem 1rem 0.75rem 2.5rem;
+    .section-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 26px;
+      padding: 18px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255, 117, 34, 0.14);
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
       width: 100%;
-      outline: none;
-      font-size: 0.875rem;
-      transition: border-color .2s;
+      height: 5px;
+      background: linear-gradient(90deg, rgba(255,255,255,0), currentColor 30%, rgba(255,255,255,0));
+      opacity: 0.24;
     }
-    .search-inp:focus { border-color: #22d3ee; }
 
-    /* List item */
-    .list-item { background: #1a1f2e; border: 1px solid rgba(34,211,238,0.08); transition: border-color .15s; }
-    .list-item:hover { border-color: rgba(34,211,238,0.3); }
+    .stat-card.brand { color: var(--brand); }
+    .stat-card.ok { color: var(--ok); }
+    .stat-card.no { color: var(--no); }
+    .stat-card.warn { color: var(--warn); }
+    .stat-card.proc { color: var(--proc); }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.3); border-radius: 4px; }
+    .stat-value {
+      font: 800 34px/1 "Rubik", sans-serif;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .stat-meta {
+      font-size: 12px;
+      font-weight: 800;
+      color: currentColor;
+      opacity: 0.92;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+    }
+
+    .donut-wrap {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mini-card {
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255, 117, 34, 0.14);
+      text-align: center;
+    }
+
+    .mini-card .title {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .mini-card .value {
+      margin-top: 10px;
+      font: 800 24px/1 "Rubik", sans-serif;
+    }
+
+    .donut-ring { fill: none; stroke-width: 18; }
+    .donut-bg { stroke: rgba(42, 36, 31, 0.08); }
+
+    .bar-stack,
+    .supplier-stack,
+    .list-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(42, 36, 31, 0.08);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .row-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .row-head strong {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .row-head span {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .month-chart {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .month-col {
+      min-width: 36px;
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .month-label,
+    .month-total {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .month-bar {
+      width: 28px;
+      border-radius: 12px 12px 8px 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column-reverse;
+      background: rgba(42, 36, 31, 0.06);
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #b18a72;
+      font-size: 16px;
+    }
+
+    .search-inp {
+      width: 100%;
+      min-height: 56px;
+      padding: 16px 18px 16px 46px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      background: rgba(255,255,255,0.9);
+      color: var(--ink);
+      font: 600 15px/1.3 "Manrope", sans-serif;
+      outline: none;
+    }
+
+    .search-inp:focus {
+      border-color: rgba(255, 107, 26, 0.5);
+      box-shadow: 0 0 0 4px rgba(255, 107, 26, 0.12);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .filter-chip {
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 10px 14px;
+      white-space: nowrap;
+      background: rgba(255,255,255,0.82);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-chip.active {
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .list-item {
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255, 117, 34, 0.14);
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-top,
+    .list-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .list-num {
+      font: 800 17px/1 "Rubik", sans-serif;
+    }
+
+    .list-supplier {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .list-title {
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .list-meta {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .list-link {
+      color: var(--brand-deep);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge-ok { background: rgba(47, 154, 99, 0.12); color: var(--ok); }
+    .badge-no { background: rgba(216, 91, 68, 0.12); color: var(--no); }
+    .badge-wp { background: rgba(231, 154, 47, 0.12); color: var(--warn); }
+    .badge-open { background: rgba(255, 107, 26, 0.12); color: var(--brand-deep); }
+    .badge-proc { background: rgba(159, 106, 255, 0.12); color: var(--proc); }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 26px 12px;
+    }
+
+    @media (max-width: 860px) {
+      .hero-grid,
+      .overview-grid,
+      .stats-grid,
+      .donut-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        position: relative;
+        top: 0;
+      }
+
+      .hero-art {
+        justify-content: flex-start;
+        max-width: none;
+      }
+
+      .section-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .section-note {
+        text-align: left;
+      }
+    }
   </style>
 </head>
-<body class="bg-[#0f1117] text-[#e0e4ed] min-h-screen">
-
-  <!-- ── HEADER ── -->
-  <div class="sticky top-0 z-50 bg-[#0f1117] border-b border-[#22d3ee]/20 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <i class="fa-solid fa-chart-pie text-[#22d3ee] text-xl"></i>
-      <div>
-        <div class="font-semibold leading-tight">studyBOTML</div>
-        <div class="text-[10px] text-[#a0a8c0]">Аналитика проработок</div>
-      </div>
-    </div>
-    <div class="text-xs text-[#a0a8c0]" id="h-total">—</div>
-  </div>
-
-  <!-- ── TAB BAR ── -->
-  <div class="flex gap-2 px-4 pt-4 pb-2">
-    <button class="tab active flex-1 py-2 rounded-2xl text-sm font-semibold" data-tab="analytics" onclick="switchTab('analytics')">
-      <i class="fa-solid fa-chart-column mr-1"></i>Аналитика
-    </button>
-    <button class="tab flex-1 py-2 rounded-2xl text-sm font-semibold text-[#a0a8c0]" data-tab="list" onclick="switchTab('list')">
-      <i class="fa-solid fa-list mr-1"></i>Список
-    </button>
-  </div>
-
-  <!-- ══════════ TAB: АНАЛИТИКА ══════════ -->
-  <div id="tab-analytics" class="px-4 pb-8 space-y-4">
-
-    <!-- Big stats row -->
-    <div class="grid grid-cols-2 gap-3 mt-1">
-      <div class="card stat-accent rounded-2xl p-4 col-span-2 flex items-center justify-between">
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-grid">
         <div>
-          <div class="text-3xl font-bold" id="a-total">—</div>
-          <div class="text-xs text-[#a0a8c0] mt-0.5">Всего заявок</div>
+          <div class="brand-row">
+            <div class="brand-badge">ML</div>
+            <div class="brand-copy">
+              <strong>Много<br>лосося</strong>
+              <span>Аналитика проработок и решений по продукту</span>
+            </div>
+          </div>
+          <h1>Панель с аппетитной аналитикой</h1>
+          <p>Тот же фирменный язык: оранжевые акценты, молочные поверхности и дружелюбные морские персонажи вместо абстрактной техно-панели.</p>
+          <div class="hero-stats">
+            <div class="pill"><span class="pill-dot"></span><span id="h-total">—</span></div>
+            <div class="pill"><span>Данные из Telegram</span></div>
+          </div>
         </div>
-        <div class="text-right space-y-1">
-          <div class="text-sm"><span class="text-[#34d399] font-semibold" id="a-closed">—</span> <span class="text-[#a0a8c0]">закрыто</span></div>
-          <div class="text-sm"><span class="text-[#22d3ee] font-semibold" id="a-open">—</span> <span class="text-[#a0a8c0]">открыто</span></div>
-          <div class="text-sm"><span class="text-[#f87171] font-semibold" id="a-overdue">—</span> <span class="text-[#a0a8c0]">просрочено</span></div>
+        <div class="hero-art" aria-hidden="true">
+          <svg class="kawaii" viewBox="0 0 64 64">
+            <path d="M11 44c0-10 10-19 24-19 8 0 14 2 18 6-3 3-4 6-4 9s1 6 4 9c-4 4-10 6-18 6-14 0-24-8-24-11z" fill="#ff6b1a"/>
+            <path d="M20 34c4-4 9-6 15-6 6 0 11 2 15 6-4 4-9 6-15 6-6 0-11-2-15-6z" fill="#ffd6c2"/>
+            <circle cx="33" cy="34" r="2" fill="#2a241f"/>
+            <circle cx="42" cy="34" r="2" fill="#2a241f"/>
+            <path d="M33 40c2 2 7 2 9 0" stroke="#2a241f" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          <svg class="kawaii" viewBox="0 0 64 64">
+            <rect x="18" y="16" width="28" height="34" rx="10" fill="#fff3ea"/>
+            <path d="M22 22h20v6H22zm0 10h20v6H22zm0 10h14v6H22z" fill="#ffb892"/>
+            <path d="M40 45l6-7 6 6-6 8z" fill="#ff6b1a"/>
+            <circle cx="30" cy="48" r="2" fill="#2a241f"/>
+            <circle cx="38" cy="48" r="2" fill="#2a241f"/>
+          </svg>
+          <svg class="kawaii" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="19" fill="#ffd27a"/>
+            <circle cx="32" cy="32" r="13" fill="#fff7ef"/>
+            <path d="M15 25c4 0 8 3 9 7M49 25c-4 0-8 3-9 7M20 47c3-3 6-7 7-12M44 47c-3-3-6-7-7-12" stroke="#ff9b43" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="27" cy="31" r="2" fill="#2a241f"/>
+            <circle cx="37" cy="31" r="2" fill="#2a241f"/>
+            <path d="M27 37c2 2 8 2 10 0" stroke="#2a241f" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="analytics" onclick="switchTab('analytics')">Аналитика</button>
+      <button class="tab" data-tab="list" onclick="switchTab('list')">Список заявок</button>
+    </div>
+
+    <section id="tab-analytics" class="panel">
+      <div class="card highlight">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker"><span class="kicker-icon">01</span>Сводка</div>
+            <h2 class="section-title">Ключевые метрики</h2>
+          </div>
+          <div class="section-note">Быстрый обзор по статусам, активности и срокам</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card brand">
+            <div class="stat-value" id="a-total">—</div>
+            <div class="stat-label">Всего заявок</div>
+            <div class="stat-meta"><span id="a-open">—</span> открыто</div>
+          </div>
+          <div class="stat-card ok">
+            <div class="stat-value" id="a-ok">—</div>
+            <div class="stat-label">Одобрено</div>
+            <div class="stat-meta" id="a-ok-pct">—</div>
+          </div>
+          <div class="stat-card no">
+            <div class="stat-value" id="a-no">—</div>
+            <div class="stat-label">Отклонено</div>
+            <div class="stat-meta" id="a-no-pct">—</div>
+          </div>
+          <div class="stat-card warn">
+            <div class="stat-value" id="a-overdue">—</div>
+            <div class="stat-label">Просрочено</div>
+            <div class="stat-meta"><span id="a-closed">—</span> закрыто</div>
+          </div>
         </div>
       </div>
 
-      <div class="card stat-ok rounded-2xl p-4 text-center">
-        <div class="text-2xl font-bold text-[#34d399]" id="a-ok">—</div>
-        <div class="text-xs text-[#a0a8c0] mt-1">Одобрено</div>
-        <div class="text-[10px] text-[#34d399] mt-1" id="a-ok-pct">—%</div>
+      <div class="overview-grid">
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker"><span class="kicker-icon">02</span>Конверсия</div>
+              <h2 class="section-title">Качество решений</h2>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <div class="mini-card">
+              <div class="title">Одобрено из закрытых</div>
+              <svg viewBox="0 0 80 80" width="94" height="94" aria-hidden="true">
+                <circle class="donut-ring donut-bg" cx="40" cy="40" r="31"></circle>
+                <circle class="donut-ring" id="donut-ok" cx="40" cy="40" r="31" stroke="#2f9a63" stroke-dasharray="0 195" stroke-linecap="round" transform="rotate(-90 40 40)"></circle>
+              </svg>
+              <div class="value" id="conv-pct">—</div>
+            </div>
+            <div class="mini-card">
+              <div class="title">SLA в срок</div>
+              <svg viewBox="0 0 80 80" width="94" height="94" aria-hidden="true">
+                <circle class="donut-ring donut-bg" cx="40" cy="40" r="31"></circle>
+                <circle class="donut-ring" id="donut-sla" cx="40" cy="40" r="31" stroke="#ff6b1a" stroke-dasharray="0 195" stroke-linecap="round" transform="rotate(-90 40 40)"></circle>
+              </svg>
+              <div class="value" id="sla-pct">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker"><span class="kicker-icon">03</span>Статусы</div>
+              <h2 class="section-title">Доп. категории</h2>
+            </div>
+          </div>
+          <div class="stats-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+            <div class="stat-card warn">
+              <div class="stat-value" id="a-wp">—</div>
+              <div class="stat-label">Доработка</div>
+              <div class="stat-meta" id="a-wp-pct">—</div>
+            </div>
+            <div class="stat-card proc">
+              <div class="stat-value" id="a-proc">—</div>
+              <div class="stat-label">В процессе</div>
+              <div class="stat-meta" id="a-proc-pct">—</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card stat-bad rounded-2xl p-4 text-center">
-        <div class="text-2xl font-bold text-[#f87171]" id="a-no">—</div>
-        <div class="text-xs text-[#a0a8c0] mt-1">Отклонено</div>
-        <div class="text-[10px] text-[#f87171] mt-1" id="a-no-pct">—%</div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker"><span class="kicker-icon">04</span>Результаты</div>
+            <h2 class="section-title">Распределение решений</h2>
+          </div>
+        </div>
+        <div class="bar-stack" id="result-bars"></div>
       </div>
-      <div class="card stat-warn rounded-2xl p-4 text-center">
-        <div class="text-2xl font-bold text-[#fbbf24]" id="a-wp">—</div>
-        <div class="text-xs text-[#a0a8c0] mt-1">Доработка</div>
-        <div class="text-[10px] text-[#fbbf24] mt-1" id="a-wp-pct">—%</div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker"><span class="kicker-icon">05</span>Поставщики</div>
+            <h2 class="section-title">Кто чаще попадает в проработку</h2>
+          </div>
+          <div class="section-note" id="sup-count"></div>
+        </div>
+        <div class="supplier-stack" id="supplier-bars"></div>
       </div>
-      <div class="card stat-purple rounded-2xl p-4 text-center">
-        <div class="text-2xl font-bold text-[#a78bfa]" id="a-proc">—</div>
-        <div class="text-xs text-[#a0a8c0] mt-1">В процессе</div>
-        <div class="text-[10px] text-[#a78bfa] mt-1" id="a-proc-pct">—%</div>
+
+      <div class="card">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker"><span class="kicker-icon">06</span>Динамика</div>
+            <h2 class="section-title">Активность по месяцам</h2>
+          </div>
+        </div>
+        <div class="month-chart" id="month-chart"></div>
       </div>
-    </div>
+    </section>
 
-    <!-- Конверсия + SLA -->
-    <div class="grid grid-cols-2 gap-3">
-      <!-- Конверсия одобрения -->
-      <div class="card rounded-2xl p-4 flex flex-col items-center">
-        <div class="text-xs text-[#a0a8c0] mb-3 self-start">Конверсия</div>
-        <svg viewBox="0 0 80 80" class="w-20 h-20">
-          <circle class="donut-ring donut-bg" cx="40" cy="40" r="31"/>
-          <circle class="donut-ring" id="donut-ok" cx="40" cy="40" r="31"
-                  stroke="#34d399" stroke-dasharray="0 195"
-                  stroke-linecap="round" transform="rotate(-90 40 40)"/>
-        </svg>
-        <div class="text-xl font-bold text-[#34d399] mt-1" id="conv-pct">—</div>
-        <div class="text-[10px] text-[#a0a8c0]">одобрено из закрытых</div>
+    <section id="tab-list" class="panel hidden">
+      <div class="card highlight">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker"><span class="kicker-icon">07</span>Поиск</div>
+            <h2 class="section-title">Живая лента заявок</h2>
+          </div>
+          <div class="section-note">Фильтрация по поставщику, номеру или номенклатуре</div>
+        </div>
+        <div class="search-wrap">
+          <div class="search-icon">⌕</div>
+          <input id="search" class="search-inp" placeholder="Например: Salmon, №145, ролл Филадельфия">
+        </div>
+        <div class="chips" style="margin-top: 12px;">
+          <button class="filter-chip active" data-f="all">Все</button>
+          <button class="filter-chip" data-f="open">Открытые</button>
+          <button class="filter-chip" data-f="ok">Одобрено</button>
+          <button class="filter-chip" data-f="no">Отклонено</button>
+          <button class="filter-chip" data-f="overdue">Просрочено</button>
+        </div>
       </div>
-      <!-- SLA -->
-      <div class="card rounded-2xl p-4 flex flex-col items-center">
-        <div class="text-xs text-[#a0a8c0] mb-3 self-start">SLA в срок</div>
-        <svg viewBox="0 0 80 80" class="w-20 h-20">
-          <circle class="donut-ring donut-bg" cx="40" cy="40" r="31"/>
-          <circle class="donut-ring" id="donut-sla" cx="40" cy="40" r="31"
-                  stroke="#22d3ee" stroke-dasharray="0 195"
-                  stroke-linecap="round" transform="rotate(-90 40 40)"/>
-        </svg>
-        <div class="text-xl font-bold text-[#22d3ee] mt-1" id="sla-pct">—</div>
-        <div class="text-[10px] text-[#a0a8c0]">закрыто без просрочки</div>
-      </div>
-    </div>
-
-    <!-- Распределение по результатам (бары) -->
-    <div class="card rounded-2xl p-4">
-      <div class="text-xs text-[#a0a8c0] uppercase tracking-wide mb-4 font-semibold">Результаты</div>
-      <div class="space-y-3" id="result-bars"></div>
-    </div>
-
-    <!-- Топ поставщиков -->
-    <div class="card rounded-2xl p-4">
-      <div class="text-xs text-[#a0a8c0] uppercase tracking-wide mb-4 font-semibold">
-        Топ поставщиков
-        <span class="ml-1 text-[#22d3ee]" id="sup-count"></span>
-      </div>
-      <div class="space-y-3" id="supplier-bars"></div>
-    </div>
-
-    <!-- Динамика по месяцам -->
-    <div class="card rounded-2xl p-4">
-      <div class="text-xs text-[#a0a8c0] uppercase tracking-wide mb-4 font-semibold">Динамика по месяцам</div>
-      <div id="month-chart" class="flex items-end gap-2 h-28 overflow-x-auto pb-1"></div>
-    </div>
-
-  </div>
-
-  <!-- ══════════ TAB: СПИСОК ══════════ -->
-  <div id="tab-list" class="px-4 pb-8 hidden">
-
-    <!-- Search -->
-    <div class="relative mt-2 mb-3">
-      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a0a8c0] text-xs"></i>
-      <input class="search-inp" id="search" placeholder="Поиск по поставщику, номеру…">
-    </div>
-
-    <!-- Filter chips -->
-    <div class="flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
-      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#22d3ee] text-[#0f1117]" data-f="all">Все</button>
-      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="open">Открытые</button>
-      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="ok">Одобрено</button>
-      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="no">Отклонено</button>
-      <button class="filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]" data-f="overdue">Просрочено</button>
-    </div>
-
-    <div id="list-container"></div>
+      <div class="list-stack" id="list-container"></div>
+    </section>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); tg.ready();
-
-    // ── Данные из URL ─────────────────────────────────────────────────────
-    const params  = new URLSearchParams(window.location.search);
-    const rawData = params.get('data');
-    let allRows   = [];
-
-    // ── Утилиты ───────────────────────────────────────────────────────────
-    const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-
-    function parseDate(s) {
-      if (!s) return null;
-      const [d,m,y] = s.split('.');
-      if (!d || !m || !y) return null;
-      return new Date(+y, +m - 1, +d);
+    const tg = window.Telegram?.WebApp || null;
+    if (tg) {
+      tg.expand();
+      tg.ready();
     }
 
-    function isOverdue(r) {
-      const slaD = parseDate(r.sla);
-      return slaD && slaD < new Date() && !r.url;
+    const params = new URLSearchParams(window.location.search);
+    const rawData = params.get("data");
+    let allRows = [];
+    let curFilter = "all";
+    let curSearch = "";
+
+    const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+
+    function parseDate(value) {
+      if (!value) return null;
+      const [day, month, year] = value.split(".");
+      if (!day || !month || !year) return null;
+      return new Date(Number(year), Number(month) - 1, Number(day));
     }
 
-    function classifyResult(res) {
-      if (!res) return 'open';
-      const r = res.toLowerCase();
-      if (r.includes('одобр'))   return 'ok';
-      if (r.includes('откло'))   return 'no';
-      if (r.includes('доработ')) return 'wp';
-      if (r.includes('процесс')) return 'proc';
-      return 'other';
+    function isOverdue(row) {
+      const slaDate = parseDate(row.sla);
+      return Boolean(slaDate && slaDate < new Date() && !row.url);
     }
 
-    function badge(res) {
-      const c = classifyResult(res);
+    function classifyResult(result) {
+      if (!result) return "open";
+      const normalized = String(result).toLowerCase();
+      if (normalized.includes("одобр")) return "ok";
+      if (normalized.includes("отклон")) return "no";
+      if (normalized.includes("доработ")) return "wp";
+      if (normalized.includes("процесс")) return "proc";
+      return "other";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "—")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function badge(result) {
+      const kind = classifyResult(result);
       const map = {
-        ok:    ['badge-ok',   '✅ Одобрено'],
-        no:    ['badge-no',   '❌ Отклонено'],
-        wp:    ['badge-wp',   '⚠️ Доработка'],
-        proc:  ['badge-proc', '🔄 В процессе'],
-        open:  ['badge-open', '📂 Открыта'],
-        other: ['badge-open', res || '—'],
+        ok: ["badge badge-ok", "Одобрено"],
+        no: ["badge badge-no", "Отклонено"],
+        wp: ["badge badge-wp", "Доработка"],
+        proc: ["badge badge-proc", "В процессе"],
+        open: ["badge badge-open", "Открыта"],
+        other: ["badge badge-open", escapeHtml(result || "—")],
       };
-      const [cls, label] = map[c] || map.open;
-      return `<span class="${cls} text-[10px] font-semibold px-2 py-0.5 rounded-full">${label}</span>`;
+      const [className, label] = map[kind] || map.open;
+      return `<span class="${className}">${label}</span>`;
     }
 
-    function pct(n, total) {
-      if (!total) return '0%';
-      return Math.round(n / total * 100) + '%';
+    function pct(value, total) {
+      if (!total) return "0%";
+      return Math.round((value / total) * 100) + "%";
     }
 
-    function donutSet(id, fraction, color) {
-      const circ = 2 * Math.PI * 31; // 194.8
-      const dash = (fraction * circ).toFixed(1);
-      const el = document.getElementById(id);
-      if (el) el.setAttribute('stroke-dasharray', `${dash} ${circ}`);
+    function donutSet(id, fraction) {
+      const circumference = 2 * Math.PI * 31;
+      const dash = (fraction * circumference).toFixed(1);
+      const node = document.getElementById(id);
+      if (node) node.setAttribute("stroke-dasharray", `${dash} ${circumference}`);
     }
 
-    // ── Аналитика ─────────────────────────────────────────────────────────
     function buildAnalytics() {
-      const total    = allRows.length;
-      const closed   = allRows.filter(r => !!r.url).length;
-      const open     = total - closed;
-      const overdue  = allRows.filter(r => isOverdue(r)).length;
-      const nOk      = allRows.filter(r => classifyResult(r.result) === 'ok').length;
-      const nNo      = allRows.filter(r => classifyResult(r.result) === 'no').length;
-      const nWp      = allRows.filter(r => classifyResult(r.result) === 'wp').length;
-      const nProc    = allRows.filter(r => classifyResult(r.result) === 'proc').length;
+      const total = allRows.length;
+      const closed = allRows.filter((row) => !!row.url).length;
+      const open = total - closed;
+      const overdue = allRows.filter((row) => isOverdue(row)).length;
+      const nOk = allRows.filter((row) => classifyResult(row.result) === "ok").length;
+      const nNo = allRows.filter((row) => classifyResult(row.result) === "no").length;
+      const nWp = allRows.filter((row) => classifyResult(row.result) === "wp").length;
+      const nProc = allRows.filter((row) => classifyResult(row.result) === "proc").length;
 
-      // Header
-      document.getElementById('h-total').textContent = total + ' заявок';
+      document.getElementById("h-total").textContent = `${total} заявок`;
+      document.getElementById("a-total").textContent = total;
+      document.getElementById("a-open").textContent = open;
+      document.getElementById("a-closed").textContent = closed;
+      document.getElementById("a-overdue").textContent = overdue;
+      document.getElementById("a-ok").textContent = nOk;
+      document.getElementById("a-no").textContent = nNo;
+      document.getElementById("a-wp").textContent = nWp;
+      document.getElementById("a-proc").textContent = nProc;
+      document.getElementById("a-ok-pct").textContent = pct(nOk, total);
+      document.getElementById("a-no-pct").textContent = pct(nNo, total);
+      document.getElementById("a-wp-pct").textContent = pct(nWp, total);
+      document.getElementById("a-proc-pct").textContent = pct(nProc, total);
 
-      // Big numbers
-      document.getElementById('a-total').textContent   = total;
-      document.getElementById('a-closed').textContent  = closed;
-      document.getElementById('a-open').textContent    = open;
-      document.getElementById('a-overdue').textContent = overdue;
-      document.getElementById('a-ok').textContent      = nOk;
-      document.getElementById('a-no').textContent      = nNo;
-      document.getElementById('a-wp').textContent      = nWp;
-      document.getElementById('a-proc').textContent    = nProc;
-      document.getElementById('a-ok-pct').textContent  = pct(nOk, total);
-      document.getElementById('a-no-pct').textContent  = pct(nNo, total);
-      document.getElementById('a-wp-pct').textContent  = pct(nWp, total);
-      document.getElementById('a-proc-pct').textContent = pct(nProc, total);
+      const convFraction = closed ? nOk / closed : 0;
+      document.getElementById("conv-pct").textContent = pct(nOk, closed || 1);
+      donutSet("donut-ok", convFraction);
 
-      // Конверсия
-      const convFrac = closed ? nOk / closed : 0;
-      document.getElementById('conv-pct').textContent = pct(nOk, closed || 1);
-      donutSet('donut-ok', convFrac, '#34d399');
-
-      // SLA: закрытых без просрочки при закрытии
-      const closedRows   = allRows.filter(r => !!r.url);
-      const slaOnTime    = closedRows.filter(r => {
-        const slaD = parseDate(r.sla);
-        if (!slaD) return true; // нет SLA — считаем ок
-        return slaD >= new Date();
+      const closedRows = allRows.filter((row) => !!row.url);
+      const slaOnTime = closedRows.filter((row) => {
+        const slaDate = parseDate(row.sla);
+        return !slaDate || slaDate >= new Date();
       }).length;
-      const slaFrac = closedRows.length ? slaOnTime / closedRows.length : 0;
-      document.getElementById('sla-pct').textContent = pct(slaOnTime, closedRows.length || 1);
-      donutSet('donut-sla', slaFrac, '#22d3ee');
+      const slaFraction = closedRows.length ? slaOnTime / closedRows.length : 0;
+      document.getElementById("sla-pct").textContent = pct(slaOnTime, closedRows.length || 1);
+      donutSet("donut-sla", slaFraction);
 
-      // Bars — результаты
       const resultItems = [
-        { label: 'Одобрено',    n: nOk,   color: '#34d399' },
-        { label: 'Отклонено',   n: nNo,   color: '#f87171' },
-        { label: 'Доработка',   n: nWp,   color: '#fbbf24' },
-        { label: 'В процессе',  n: nProc, color: '#a78bfa' },
-        { label: 'Открытые',    n: open - nProc,  color: '#22d3ee' },
-      ].filter(x => x.n > 0);
-      const maxR = Math.max(...resultItems.map(x => x.n), 1);
+        { label: "Одобрено", value: nOk, color: "#2f9a63" },
+        { label: "Отклонено", value: nNo, color: "#d85b44" },
+        { label: "Доработка", value: nWp, color: "#e79a2f" },
+        { label: "В процессе", value: nProc, color: "#9f6aff" },
+        { label: "Открытые", value: open - nProc, color: "#ff6b1a" },
+      ].filter((item) => item.value > 0);
 
-      document.getElementById('result-bars').innerHTML = resultItems.map(x => `
+      const maxResult = Math.max(...resultItems.map((item) => item.value), 1);
+      document.getElementById("result-bars").innerHTML = resultItems.map((item) => `
         <div>
-          <div class="flex justify-between text-xs mb-1">
-            <span class="text-[#e0e4ed]">${x.label}</span>
-            <span class="text-[#a0a8c0]">${x.n} · ${pct(x.n, total)}</span>
+          <div class="row-head">
+            <strong>${item.label}</strong>
+            <span>${item.value} · ${pct(item.value, total)}</span>
           </div>
           <div class="bar-track">
-            <div class="bar-fill" style="width:${Math.round(x.n/maxR*100)}%; background:${x.color}"></div>
+            <div class="bar-fill" style="width:${Math.round((item.value / maxResult) * 100)}%; background:${item.color}"></div>
           </div>
         </div>
-      `).join('');
+      `).join("");
 
-      // Bars — поставщики
-      const supMap = {};
-      allRows.forEach(r => {
-        const s = (r.supplier || '—').trim();
-        supMap[s] = (supMap[s] || 0) + 1;
+      const supplierMap = {};
+      allRows.forEach((row) => {
+        const supplier = String(row.supplier || "—").trim();
+        supplierMap[supplier] = (supplierMap[supplier] || 0) + 1;
       });
-      const suppliers = Object.entries(supMap).sort((a,b)=>b[1]-a[1]).slice(0, 7);
-      const maxS = suppliers[0]?.[1] || 1;
-      document.getElementById('sup-count').textContent = '(' + Object.keys(supMap).length + ')';
-
-      document.getElementById('supplier-bars').innerHTML = suppliers.map(([sup, n]) => `
+      const suppliers = Object.entries(supplierMap).sort((a, b) => b[1] - a[1]).slice(0, 7);
+      const maxSupplier = suppliers[0]?.[1] || 1;
+      document.getElementById("sup-count").textContent = `${Object.keys(supplierMap).length} поставщиков`;
+      document.getElementById("supplier-bars").innerHTML = suppliers.map(([supplier, value]) => `
         <div>
-          <div class="flex justify-between text-xs mb-1">
-            <span class="text-[#e0e4ed] truncate max-w-[70%]">${sup}</span>
-            <span class="text-[#a0a8c0]">${n} заявок</span>
+          <div class="row-head">
+            <strong>${escapeHtml(supplier)}</strong>
+            <span>${value} заявок</span>
           </div>
           <div class="bar-track">
-            <div class="bar-fill" style="width:${Math.round(n/maxS*100)}%; background:#22d3ee"></div>
+            <div class="bar-fill" style="width:${Math.round((value / maxSupplier) * 100)}%; background:linear-gradient(90deg, #ff6b1a, #ffb067)"></div>
           </div>
         </div>
-      `).join('');
+      `).join("");
 
-      // Динамика по месяцам
       const monthMap = {};
-      allRows.forEach(r => {
-        const d = parseDate(r.date);
-        if (!d) return;
-        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        if (!monthMap[key]) monthMap[key] = { ok:0, no:0, other:0, label: MONTHS[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) };
-        const cls = classifyResult(r.result);
-        if (cls==='ok') monthMap[key].ok++;
-        else if (cls==='no') monthMap[key].no++;
-        else monthMap[key].other++;
+      allRows.forEach((row) => {
+        const date = parseDate(row.date);
+        if (!date) return;
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        if (!monthMap[key]) {
+          monthMap[key] = {
+            ok: 0,
+            no: 0,
+            other: 0,
+            label: `${MONTHS[date.getMonth()]} ${String(date.getFullYear()).slice(2)}`,
+          };
+        }
+        const bucket = classifyResult(row.result);
+        if (bucket === "ok") monthMap[key].ok += 1;
+        else if (bucket === "no") monthMap[key].no += 1;
+        else monthMap[key].other += 1;
       });
-      const months = Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-12);
-      const maxM   = Math.max(...months.map(([,v]) => v.ok + v.no + v.other), 1);
 
-      document.getElementById('month-chart').innerHTML = months.map(([key, v]) => {
-        const ttl = v.ok + v.no + v.other;
-        const h   = Math.max(Math.round(ttl / maxM * 96), 4);
+      const months = Object.entries(monthMap).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+      const maxMonth = Math.max(...months.map(([, value]) => value.ok + value.no + value.other), 1);
+      document.getElementById("month-chart").innerHTML = months.map(([, value]) => {
+        const totalValue = value.ok + value.no + value.other;
+        const height = Math.max(Math.round((totalValue / maxMonth) * 110), 8);
+        const okPart = totalValue ? Math.round((value.ok / totalValue) * 100) : 0;
+        const noPart = totalValue ? Math.round((value.no / totalValue) * 100) : 0;
+        const otherPart = totalValue ? Math.max(100 - okPart - noPart, 0) : 100;
         return `
-          <div class="flex flex-col items-center gap-1 flex-shrink-0" style="min-width:32px">
-            <div class="text-[9px] text-[#a0a8c0]">${ttl}</div>
-            <div class="w-7 rounded-t-md overflow-hidden flex flex-col-reverse" style="height:${h}px">
-              <div style="height:${Math.round(v.ok/ttl*100)}%; background:#34d399; flex-shrink:0"></div>
-              <div style="height:${Math.round(v.no/ttl*100)}%; background:#f87171; flex-shrink:0"></div>
-              <div style="height:${Math.round(v.other/ttl*100)}%; background:#22d3ee; flex-shrink:0"></div>
+          <div class="month-col">
+            <div class="month-total">${totalValue}</div>
+            <div class="month-bar" style="height:${height}px">
+              <div style="height:${okPart}%; background:#2f9a63"></div>
+              <div style="height:${noPart}%; background:#d85b44"></div>
+              <div style="height:${otherPart}%; background:#ff6b1a"></div>
             </div>
-            <div class="text-[9px] text-[#a0a8c0] text-center leading-tight">${v.label}</div>
-          </div>`;
-      }).join('');
+            <div class="month-label">${value.label}</div>
+          </div>
+        `;
+      }).join("");
     }
-
-    // ── Список ────────────────────────────────────────────────────────────
-    let curFilter = 'all';
-    let curSearch = '';
 
     function renderList() {
-      let rows = allRows.filter(r => {
-        const c = classifyResult(r.result);
-        const hasAct = !!r.url;
-        if (curFilter === 'open')    return !hasAct;
-        if (curFilter === 'ok')      return c === 'ok';
-        if (curFilter === 'no')      return c === 'no';
-        if (curFilter === 'overdue') return isOverdue(r);
+      let rows = allRows.filter((row) => {
+        const resultType = classifyResult(row.result);
+        const hasAct = !!row.url;
+        if (curFilter === "open") return !hasAct;
+        if (curFilter === "ok") return resultType === "ok";
+        if (curFilter === "no") return resultType === "no";
+        if (curFilter === "overdue") return isOverdue(row);
         return true;
       });
+
       if (curSearch) {
-        const q = curSearch.toLowerCase();
-        rows = rows.filter(r =>
-          (r.supplier||'').toLowerCase().includes(q) ||
-          (r.num||'').toLowerCase().includes(q) ||
-          (r.nom||'').toLowerCase().includes(q)
+        const query = curSearch.toLowerCase();
+        rows = rows.filter((row) =>
+          String(row.supplier || "").toLowerCase().includes(query) ||
+          String(row.num || "").toLowerCase().includes(query) ||
+          String(row.nom || "").toLowerCase().includes(query)
         );
       }
 
-      const el = document.getElementById('list-container');
+      const container = document.getElementById("list-container");
       if (!rows.length) {
-        el.innerHTML = '<div class="text-center text-[#a0a8c0] py-16 text-sm">Ничего не найдено</div>';
+        container.innerHTML = `<div class="card empty">Ничего не найдено. Попробуйте снять фильтр или уточнить поиск.</div>`;
         return;
       }
 
-      el.innerHTML = rows.slice(0, 100).map(r => `
-        <div class="list-item rounded-2xl p-4 mb-2">
-          <div class="flex items-start justify-between mb-2">
-            <span class="font-semibold text-sm">${r.num || '—'}</span>
-            ${badge(r.result)}
-          </div>
-          <div class="text-xs text-[#a0a8c0] mb-1">${r.supplier || '—'}</div>
-          <div class="text-sm mb-3 leading-snug">${r.nom || '—'}</div>
-          <div class="flex items-center justify-between text-xs text-[#a0a8c0]">
-            <div class="flex items-center gap-2">
-              <span>${r.date || ''}</span>
-              ${r.sla ? `<span class="${isOverdue(r) ? 'text-[#f87171]' : ''}">· SLA ${r.sla}${isOverdue(r) ? ' 🔴' : ''}</span>` : ''}
+      container.innerHTML = rows.slice(0, 100).map((row) => `
+        <article class="list-item">
+          <div class="list-top">
+            <div>
+              <div class="list-num">${escapeHtml(row.num || "—")}</div>
+              <div class="list-supplier">${escapeHtml(row.supplier || "—")}</div>
             </div>
-            ${r.url
-              ? `<a href="${r.url}" target="_blank" class="text-[#22d3ee] font-medium">📄 Акт</a>`
-              : `<span class="text-[#a0a8c0]">Нет акта</span>`}
+            ${badge(row.result)}
           </div>
-        </div>
-      `).join('');
+          <div class="list-title">${escapeHtml(row.nom || "—")}</div>
+          <div class="list-bottom">
+            <div class="list-meta">
+              <span>${escapeHtml(row.date || "")}</span>
+              ${row.sla ? `<span style="${isOverdue(row) ? "color:#d85b44" : ""}">SLA ${escapeHtml(row.sla)}${isOverdue(row) ? " • просрочено" : ""}</span>` : ""}
+            </div>
+            ${row.url
+              ? `<a class="list-link" href="${escapeHtml(row.url)}" target="_blank" rel="noreferrer">Открыть акт</a>`
+              : `<span class="list-meta">Без акта</span>`}
+          </div>
+        </article>
+      `).join("");
     }
 
-    // Кнопки-чипы
-    document.querySelectorAll('.filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-chip').forEach(b => {
-          b.className = 'filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1f2e] text-[#a0a8c0] border border-[#334155]';
-        });
-        btn.className = 'filter-chip whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#22d3ee] text-[#0f1117]';
-        curFilter = btn.dataset.f;
+    document.querySelectorAll(".filter-chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".filter-chip").forEach((chip) => chip.classList.remove("active"));
+        button.classList.add("active");
+        curFilter = button.dataset.f;
         renderList();
       });
     });
 
-    document.getElementById('search').addEventListener('input', e => {
-      curSearch = e.target.value.trim();
+    document.getElementById("search").addEventListener("input", (event) => {
+      curSearch = event.target.value.trim();
       renderList();
     });
 
-    // ── Tab switching ─────────────────────────────────────────────────────
-    function switchTab(t) {
-      document.querySelectorAll('.tab').forEach(b => {
-        const active = b.dataset.tab === t;
-        b.className = `tab flex-1 py-2 rounded-2xl text-sm font-semibold ${active ? 'bg-[#22d3ee] text-[#0f1117] active' : 'text-[#a0a8c0]'}`;
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabName);
       });
-      document.getElementById('tab-analytics').classList.toggle('hidden', t !== 'analytics');
-      document.getElementById('tab-list').classList.toggle('hidden', t !== 'list');
+      document.getElementById("tab-analytics").classList.toggle("hidden", tabName !== "analytics");
+      document.getElementById("tab-list").classList.toggle("hidden", tabName !== "list");
     }
 
-    // ── Загрузка данных ───────────────────────────────────────────────────
     if (rawData) {
       try {
         allRows = JSON.parse(decodeURIComponent(rawData));
         buildAnalytics();
         renderList();
-      } catch(e) {
-        document.getElementById('tab-analytics').innerHTML =
-          '<div class="text-center text-[#f87171] py-16 text-sm px-4">Ошибка разбора данных</div>';
+      } catch (error) {
+        document.getElementById("tab-analytics").innerHTML = `<div class="card empty" style="color:#d85b44">Ошибка разбора данных. Проверьте формат параметра <code>data</code>.</div>`;
       }
     } else {
-      document.getElementById('tab-analytics').innerHTML =
-        '<div class="text-center text-[#a0a8c0] py-16 text-sm px-4">Данные не переданы.<br>Откройте через бота: /dashboard</div>';
+      document.getElementById("tab-analytics").innerHTML = `<div class="card empty">Данные не переданы. Откройте дашборд из Telegram-бота, чтобы увидеть метрики.</div>`;
     }
   </script>
 </body>

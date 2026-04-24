@@ -1,231 +1,740 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>studyBOTML — Проработка сырья</title>
+  <title>Много лосося — акт проработки</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    body { font-family: 'Inter', system-ui, sans-serif; }
+    :root {
+      --bg: #fff6ee;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-strong: #fffdf9;
+      --ink: #2b2520;
+      --muted: #7a6556;
+      --line: rgba(255, 117, 34, 0.14);
+      --line-strong: rgba(255, 117, 34, 0.24);
+      --brand: #ff6b1a;
+      --brand-deep: #ff4d00;
+      --brand-soft: #ffd6bf;
+      --ok: #2f9a63;
+      --warn: #e79a2f;
+      --danger: #dd5d45;
+      --shadow: 0 18px 40px rgba(111, 61, 28, 0.12);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+    }
 
-    .card {
-      background: #1a1f2e;
-      border: 1px solid rgba(34,211,238,0.15);
-      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
-    }
-    .field-input {
-      background: #12161f;
-      border: 1px solid #334155;
-      color: #e0e4ed;
-      width: 100%;
-      border-radius: 1rem;
-      padding: 0.9rem 1rem;
-      font-size: 0.875rem;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-appearance: none;
-      appearance: none;
-      box-sizing: border-box;
-    }
-    .field-input:focus {
-      border-color: #22d3ee;
-      box-shadow: 0 0 0 3px rgba(34,211,238,0.2);
-    }
-    select.field-input {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2322d3ee' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      padding-right: 2.5rem;
-    }
-    textarea.field-input { resize: none; line-height: 1.5; border-radius: 1rem; }
+    * { box-sizing: border-box; }
 
-    .info-block {
-      background: #12161f;
-      border: 1px solid #334155;
-      border-radius: 1rem;
-      padding: 0.75rem 1rem;
-      font-size: 0.875rem;
-      color: #e0e4ed;
-      opacity: 0.7;
-      min-height: 3rem;
-      display: flex;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(255, 108, 28, 0.38), transparent 22rem),
+        radial-gradient(circle at bottom left, rgba(255, 179, 130, 0.55), transparent 18rem),
+        linear-gradient(180deg, #fffaf4 0%, #fff1e5 100%);
+      padding: 20px 16px 120px;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      filter: blur(26px);
+      pointer-events: none;
+    }
+
+    body::before {
+      top: -50px;
+      right: -40px;
+      background: rgba(255, 104, 21, 0.24);
+    }
+
+    body::after {
+      bottom: 24px;
+      left: -60px;
+      background: rgba(255, 188, 152, 0.36);
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 920px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      position: sticky;
+      top: 12px;
+      z-index: 20;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 85% 18%, rgba(255, 113, 35, 0.95), transparent 22%),
+        radial-gradient(circle at 100% 0%, rgba(255, 169, 120, 0.65), transparent 26%),
+        linear-gradient(135deg, #fffdf9 0%, #fff5eb 100%);
+      border: 1px solid rgba(255, 117, 34, 0.18);
+      border-radius: 34px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
       align-items: center;
     }
 
-    .section-header::after {
-      content: '';
-      position: absolute;
-      bottom: -2px; left: 0;
-      width: 48px; height: 3px;
-      background: linear-gradient(to right, #22d3ee, transparent);
-      border-radius: 9999px;
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font: 800 17px/1 "Rubik", sans-serif;
+      box-shadow: 0 14px 24px rgba(255, 107, 26, 0.28);
+    }
+
+    .brand-copy strong,
+    .section-title,
+    .hero h1 {
+      font-family: "Rubik", sans-serif;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.05;
+    }
+
+    .brand-copy span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 0.95;
+      max-width: 10ch;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 42ch;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .meta-pill,
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      backdrop-filter: blur(10px);
+    }
+
+    .status-pill {
+      justify-content: center;
+      background: rgba(255, 111, 37, 0.11);
+      color: var(--brand-deep);
+    }
+
+    .meta-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      box-shadow: 0 0 0 6px rgba(255, 107, 26, 0.12);
+    }
+
+    .hero-illustrations {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      max-width: 220px;
+    }
+
+    .kawaii {
+      width: 70px;
+      height: 70px;
+      padding: 8px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 117, 34, 0.18);
+      box-shadow: 0 18px 28px rgba(255, 107, 26, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(14px);
+    }
+
+    .card.highlight {
+      background:
+        radial-gradient(circle at top right, rgba(255, 107, 26, 0.09), transparent 35%),
+        var(--surface-strong);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 107, 26, 0.08);
+      border: 1px solid rgba(255, 107, 26, 0.13);
+      color: var(--brand-deep);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font: 700 13px/1 "Rubik", sans-serif;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .field label .required {
+      color: var(--brand-deep);
+    }
+
+    .field-input,
+    .info-block {
+      width: 100%;
+      min-height: 56px;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 117, 34, 0.16);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      font: 600 15px/1.3 "Manrope", sans-serif;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .field-input::placeholder { color: #baa28f; }
+
+    .field-input:focus {
+      border-color: rgba(255, 107, 26, 0.5);
+      box-shadow: 0 0 0 4px rgba(255, 107, 26, 0.12);
+      transform: translateY(-1px);
+    }
+
+    select.field-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10'%3E%3Cpath d='M2 2.5 7 7.5l5-5' fill='none' stroke='%23ff5a1f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 18px center;
+      padding-right: 48px;
+    }
+
+    textarea.field-input {
+      min-height: 132px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .info-block {
+      display: flex;
+      align-items: center;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 247, 238, 0.95));
+    }
+
+    .hint-box {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-top: 8px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 107, 26, 0.08);
+      color: #7d512d;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .hint-emoji {
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #fff;
+      font-size: 16px;
     }
 
     .calc-card {
-      background: rgba(34,211,238,0.07);
-      border: 1px solid rgba(34,211,238,0.3);
       display: none;
     }
-    .calc-card.visible { display: block; }
+
+    .calc-card.visible {
+      display: block;
+    }
+
+    .calc-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(255, 117, 34, 0.12);
+    }
+
+    .metric-row span:first-child {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric-row span:last-child {
+      font-family: "Rubik", sans-serif;
+      font-size: 18px;
+    }
+
+    .photo-drop {
+      position: relative;
+      min-height: 210px;
+      border-radius: 28px;
+      border: 2px dashed rgba(255, 107, 26, 0.28);
+      background:
+        radial-gradient(circle at top right, rgba(255, 107, 26, 0.12), transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,247,238,0.96));
+      display: grid;
+      place-items: center;
+      text-align: center;
+      cursor: pointer;
+      padding: 20px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .photo-drop:hover {
+      border-color: rgba(255, 107, 26, 0.48);
+      transform: translateY(-2px);
+    }
+
+    .photo-hero {
+      width: 86px;
+      height: 86px;
+      margin: 0 auto 14px;
+      padding: 12px;
+      border-radius: 28px;
+      background: rgba(255, 107, 26, 0.12);
+    }
+
+    .photo-copy strong {
+      display: block;
+      font: 700 18px/1.1 "Rubik", sans-serif;
+      margin-bottom: 6px;
+    }
+
+    .photo-copy span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    #photos-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      width: 100%;
+    }
+
+    #photos-area.hidden,
+    #drop-placeholder.hidden {
+      display: none;
+    }
 
     .photo-thumb {
-      width: 72px; height: 72px;
-      border-radius: 0.75rem;
+      width: calc(33.333% - 8px);
+      min-width: 92px;
+      aspect-ratio: 1;
       object-fit: cover;
-      border: 2px solid rgba(34,211,238,0.3);
-      flex-shrink: 0;
+      border-radius: 20px;
+      border: 2px solid rgba(255, 107, 26, 0.18);
+      box-shadow: 0 14px 28px rgba(99, 63, 36, 0.12);
+    }
+
+    .subtle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .sticky-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      padding: 14px 16px 18px;
+      background: linear-gradient(180deg, rgba(255, 246, 238, 0), rgba(255, 246, 238, 0.92) 30%, rgba(255, 246, 238, 1) 100%);
+      backdrop-filter: blur(16px);
+    }
+
+    .sticky-inner {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    .submit-btn {
+      width: 100%;
+      min-height: 62px;
+      border: none;
+      border-radius: 999px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
+      color: #fff;
+      font: 800 18px/1 "Rubik", sans-serif;
+      letter-spacing: 0.01em;
+      box-shadow: 0 18px 32px rgba(255, 97, 20, 0.32);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .submit-btn:not(:disabled):active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.45;
+      box-shadow: none;
+    }
+
+    .cta-icon {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .hero-grid,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        position: relative;
+        top: 0;
+      }
+
+      .hero h1 {
+        max-width: none;
+      }
+
+      .hero-illustrations {
+        justify-content: flex-start;
+        max-width: none;
+      }
+
+      .section-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .section-note {
+        text-align: left;
+      }
+
+      .photo-thumb {
+        width: calc(50% - 6px);
+      }
     }
   </style>
 </head>
-<body class="bg-[#0f1117] text-[#e0e4ed] min-h-screen pb-28">
-
-  <!-- ── HEADER ── -->
-  <div class="sticky top-0 z-50 bg-[#0f1117] border-b border-[#22d3ee]/20 px-5 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <i class="fa-solid fa-robot text-[#22d3ee] text-2xl"></i>
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">studyBOTML</h1>
-        <p class="text-xs text-[#a0a8c0]">Проработка сырья</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-3">
-      <div class="px-3 py-1.5 rounded-2xl bg-emerald-500/10 text-emerald-400 text-sm font-medium flex items-center gap-1">
-        <i class="fa-solid fa-circle-check text-xs"></i>
-        <span>В работе</span>
-      </div>
-      <div class="text-right">
-        <div class="text-xs text-[#a0a8c0]" id="h-num">—</div>
-        <div class="text-sm font-semibold text-white" id="h-sla">—</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="max-w-2xl mx-auto px-5 pt-6 space-y-5">
-
-    <!-- 1. ЗАЯВКА -->
-    <div class="card rounded-3xl p-6">
-      <div class="section-header relative flex items-center gap-3 mb-5">
-        <i class="fa-solid fa-file-lines text-[#22d3ee]"></i>
-        <h2 class="text-lg font-semibold">Заявка на проработку</h2>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-grid">
         <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Номер</label>
+          <div class="brand-mark">
+            <div class="brand-badge">ML</div>
+            <div class="brand-copy">
+              <strong>Много<br>лосося</strong>
+              <span>Мини-апп для проработки сырья</span>
+            </div>
+          </div>
+          <h1>Акт проработки в фирменном стиле</h1>
+          <p>Тёплый, аппетитный интерфейс с мягкими карточками и дружелюбными морскими акцентами вместо холодной техно-темы.</p>
+          <div class="hero-meta">
+            <div class="status-pill"><span class="meta-dot"></span><span>Заявка в работе</span></div>
+            <div class="meta-pill"><strong id="h-num">—</strong></div>
+            <div class="meta-pill"><span>SLA</span><strong id="h-sla">—</strong></div>
+          </div>
+        </div>
+        <div class="hero-illustrations" aria-hidden="true">
+          <svg class="kawaii" viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="salmonBody" x1="0" x2="1">
+                <stop offset="0%" stop-color="#ff8b5b"/>
+                <stop offset="100%" stop-color="#ff5a1f"/>
+              </linearGradient>
+            </defs>
+            <path d="M12 34c0-9 10-18 25-18 7 0 13 2 18 6-3 3-4 7-4 10s1 7 4 10c-5 4-11 6-18 6-15 0-25-9-25-14z" fill="url(#salmonBody)"/>
+            <path d="M22 24c6 0 12 3 17 8-5 5-11 8-17 8-4 0-8-1-11-3l4-4-4-4c3-3 7-5 11-5z" fill="#ffd2c0"/>
+            <circle cx="36" cy="29" r="2" fill="#2b2520"/>
+            <circle cx="44" cy="29" r="2" fill="#2b2520"/>
+            <path d="M35 35c2 2 8 2 10 0" stroke="#2b2520" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="33" cy="33" r="1.4" fill="#ffb7a1"/>
+            <circle cx="47" cy="33" r="1.4" fill="#ffb7a1"/>
+          </svg>
+          <svg class="kawaii" viewBox="0 0 64 64">
+            <rect x="10" y="38" width="44" height="12" rx="6" fill="#f6f0ea"/>
+            <path d="M12 35c3-9 10-14 20-14s17 5 20 14H12z" fill="#ff6b1a"/>
+            <path d="M18 31c4-3 8-4 14-4 6 0 11 1 15 4" stroke="#ffd9c8" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="26" cy="34" r="2" fill="#2b2520"/>
+            <circle cx="38" cy="34" r="2" fill="#2b2520"/>
+            <path d="M27 40c2 2 8 2 10 0" stroke="#2b2520" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          <svg class="kawaii" viewBox="0 0 64 64">
+            <path d="M32 13c11 0 19 8 19 19 0 13-11 20-19 20s-19-7-19-20c0-11 8-19 19-19z" fill="#ffcf74"/>
+            <path d="M32 19c7 0 13 6 13 13s-6 13-13 13-13-6-13-13 6-13 13-13z" fill="#fff6ee"/>
+            <circle cx="27" cy="31" r="2" fill="#2b2520"/>
+            <circle cx="37" cy="31" r="2" fill="#2b2520"/>
+            <path d="M27 37c2 2 8 2 10 0" stroke="#2b2520" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M12 24c4 0 7 3 8 7M52 24c-4 0-7 3-8 7M17 47c4-3 7-8 8-13M47 47c-4-3-7-8-8-13" stroke="#ff9b43" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <section class="card highlight">
+      <div class="section-head">
+        <div>
+          <div class="section-tag"><span class="section-icon">01</span>Заявка</div>
+          <h2 class="section-title">Карточка поставки</h2>
+        </div>
+        <div class="section-note">Базовые данные подтягиваются автоматически из ссылки Telegram</div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Номер</label>
           <div class="info-block" id="inf-num">—</div>
         </div>
-        <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Поставщик</label>
+        <div class="field">
+          <label>Поставщик</label>
           <div class="info-block" id="inf-sup">—</div>
         </div>
-        <div class="col-span-2">
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Номенклатура</label>
+        <div class="field full">
+          <label>Номенклатура</label>
           <div class="info-block" id="inf-nom">—</div>
         </div>
-        <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Артикул</label>
+        <div class="field">
+          <label>Артикул</label>
           <div class="info-block" id="inf-art">—</div>
         </div>
-        <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Цена, руб.</label>
+        <div class="field">
+          <label>Цена</label>
           <div class="info-block" id="inf-price">—</div>
         </div>
-        <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">SLA</label>
+        <div class="field">
+          <label>SLA</label>
           <div class="info-block" id="inf-sla">—</div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 2. ЗАМЕРЫ МАССЫ -->
-    <div class="card rounded-3xl p-6">
-      <div class="section-header relative flex items-center gap-3 mb-5">
-        <i class="fa-solid fa-scale-balanced text-[#22d3ee]"></i>
-        <h2 class="text-lg font-semibold">Замеры массы (кг)</h2>
-      </div>
-      <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="text-xs font-medium text-[#a0a8c0] block mb-1">
-              Масса по маркировке <span class="text-red-400">*</span>
-            </label>
-            <div class="relative">
-              <input type="number" id="massa_mark" placeholder="10.5"
-                     step="0.01" min="0" inputmode="decimal" class="field-input pr-10">
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[#a0a8c0]">кг</span>
-            </div>
-          </div>
-          <div>
-            <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Перетарка</label>
-            <input type="number" id="peretarka" placeholder="—"
-                   step="0.01" min="0" inputmode="decimal" class="field-input">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Дефрост</label>
-            <input type="number" id="defrost" placeholder="—"
-                   step="0.01" min="0" inputmode="decimal" class="field-input">
-          </div>
-          <div>
-            <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Зачистка</label>
-            <input type="number" id="zachistka" placeholder="—"
-                   step="0.01" min="0" inputmode="decimal" class="field-input">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Масса ПФ</label>
-            <input type="number" id="pf_massa" placeholder="—"
-                   step="0.01" min="0" inputmode="decimal" class="field-input">
-          </div>
-          <div>
-            <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Термообработка</label>
-            <input type="number" id="termo" placeholder="—"
-                   step="0.01" min="0" inputmode="decimal" class="field-input">
-          </div>
-        </div>
+    <section class="card">
+      <div class="section-head">
         <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">
-            Дата производства <span class="text-red-400">*</span>
-          </label>
+          <div class="section-tag"><span class="section-icon">02</span>Замеры</div>
+          <h2 class="section-title">Масса по этапам</h2>
+        </div>
+        <div class="section-note">Заполняйте фактические значения. Расчёт появится автоматически.</div>
+      </div>
+      <div class="stack">
+        <div class="grid-2">
+          <div class="field">
+            <label>Масса по маркировке <span class="required">*</span></label>
+            <input type="number" id="massa_mark" placeholder="Например, 10.5" step="0.01" min="0" inputmode="decimal" class="field-input">
+          </div>
+          <div class="field">
+            <label>Перетарка</label>
+            <input type="number" id="peretarka" placeholder="Необязательно" step="0.01" min="0" inputmode="decimal" class="field-input">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Дефрост</label>
+            <input type="number" id="defrost" placeholder="Необязательно" step="0.01" min="0" inputmode="decimal" class="field-input">
+          </div>
+          <div class="field">
+            <label>Зачистка</label>
+            <input type="number" id="zachistka" placeholder="Необязательно" step="0.01" min="0" inputmode="decimal" class="field-input">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Масса ПФ</label>
+            <input type="number" id="pf_massa" placeholder="Финальная масса полуфабриката" step="0.01" min="0" inputmode="decimal" class="field-input">
+          </div>
+          <div class="field">
+            <label>Термообработка</label>
+            <input type="number" id="termo" placeholder="Если есть" step="0.01" min="0" inputmode="decimal" class="field-input">
+          </div>
+        </div>
+        <div class="field">
+          <label>Дата производства <span class="required">*</span></label>
           <input type="date" id="prod_date" class="field-input">
         </div>
       </div>
-    </div>
+      <div class="hint-box">
+        <div class="hint-emoji">🍣</div>
+        <div>Если часть этапов не используется, поле можно оставить пустым. Для расчёта коэффициента достаточно массы по маркировке и массы ПФ.</div>
+      </div>
+    </section>
 
-    <!-- РАСЧЁТ (появляется автоматически) -->
-    <div class="calc-card card rounded-3xl p-6" id="calc-box">
-      <div class="flex items-center gap-2 mb-4">
-        <i class="fa-solid fa-chart-line text-[#22d3ee]"></i>
-        <span class="font-semibold text-[#22d3ee]">Расчёт</span>
+    <section class="card highlight calc-card" id="calc-box">
+      <div class="section-head">
+        <div>
+          <div class="section-tag"><span class="section-icon">03</span>Расчёт</div>
+          <h2 class="section-title">Экономика проработки</h2>
+        </div>
+        <div class="section-note">Промежуточные показатели для решения по продукту</div>
       </div>
-      <div class="space-y-2 text-sm">
-        <div class="flex justify-between">
-          <span class="text-[#a0a8c0]">Итого потери:</span>
-          <span class="font-semibold" id="c-loss">—</span>
+      <div class="calc-grid">
+        <div class="metric-row">
+          <span>Итого потери</span>
+          <span id="c-loss">—</span>
         </div>
-        <div class="flex justify-between">
-          <span class="text-[#a0a8c0]">Коэффициент:</span>
-          <span class="font-semibold" id="c-koef">—</span>
+        <div class="metric-row">
+          <span>Коэффициент</span>
+          <span id="c-koef">—</span>
         </div>
-        <div class="flex justify-between">
-          <span class="text-[#a0a8c0]">Цена ПФ:</span>
-          <span class="font-semibold text-[#22d3ee]" id="c-price">—</span>
+        <div class="metric-row">
+          <span>Цена ПФ</span>
+          <span id="c-price">—</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 3. ПРОЧЕЕ -->
-    <div class="card rounded-3xl p-6">
-      <div class="section-header relative flex items-center gap-3 mb-5">
-        <i class="fa-solid fa-tag text-[#22d3ee]"></i>
-        <h2 class="text-lg font-semibold">Прочее</h2>
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <div class="section-tag"><span class="section-icon">04</span>Прочее</div>
+          <h2 class="section-title">Маркировка и детали</h2>
+        </div>
       </div>
-      <div>
-        <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Маркировка ПФ</label>
+      <div class="field">
+        <label>Маркировка ПФ</label>
         <select id="marking" class="field-input">
           <option value="">— не выбрано —</option>
           <option value="Да">Да</option>
@@ -233,41 +742,49 @@
           <option value="—">Не применимо</option>
         </select>
       </div>
-    </div>
+    </section>
 
-    <!-- 4. ФОТО -->
-    <div class="card rounded-3xl p-6">
-      <div class="section-header relative flex items-center gap-3 mb-5">
-        <i class="fa-solid fa-camera text-[#22d3ee]"></i>
-        <h2 class="text-lg font-semibold">Фото (необязательно)</h2>
-      </div>
-      <div id="drop-zone"
-           onclick="document.getElementById('photo-input').click()"
-           class="border-2 border-dashed border-[#22d3ee]/30 rounded-3xl min-h-40 flex flex-col items-center justify-center hover:border-[#22d3ee]/60 transition-colors cursor-pointer p-4">
-        <div id="drop-placeholder" class="flex flex-col items-center">
-          <i class="fa-solid fa-cloud-arrow-up text-5xl text-[#22d3ee]/60 mb-3"></i>
-          <p class="text-sm font-medium">Нажмите, чтобы добавить фото</p>
-          <p class="text-xs text-[#a0a8c0] mt-1">JPG · PNG · до 10 МБ</p>
-        </div>
-        <div id="photos-area" class="flex flex-wrap gap-2 w-full hidden"></div>
-      </div>
-      <input type="file" id="photo-input" accept="image/*" multiple class="hidden">
-      <p class="text-[10px] text-[#a0a8c0] mt-3 text-center">
-        Фото отправляются в чат после заполнения формы
-      </p>
-    </div>
-
-    <!-- 5. РЕЗУЛЬТАТ -->
-    <div class="card rounded-3xl p-6">
-      <div class="section-header relative flex items-center gap-3 mb-5">
-        <i class="fa-solid fa-check-double text-[#22d3ee]"></i>
-        <h2 class="text-lg font-semibold">Результат проработки</h2>
-      </div>
-      <div class="space-y-4">
+    <section class="card">
+      <div class="section-head">
         <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">
-            Ответственный <span class="text-red-400">*</span>
-          </label>
+          <div class="section-tag"><span class="section-icon">05</span>Фото</div>
+          <h2 class="section-title">Визуальная фиксация</h2>
+        </div>
+        <div class="section-note">Поддерживает несколько фото сырья, этапов или итогового продукта</div>
+      </div>
+
+      <div id="drop-zone" class="photo-drop" onclick="document.getElementById('photo-input').click()">
+        <div id="drop-placeholder">
+          <svg class="photo-hero" viewBox="0 0 88 88" aria-hidden="true">
+            <rect x="11" y="14" width="66" height="54" rx="18" fill="#ff6b1a" opacity="0.14"/>
+            <rect x="18" y="22" width="52" height="40" rx="14" fill="#fff"/>
+            <circle cx="34" cy="38" r="6" fill="#ffb48a"/>
+            <path d="M25 54c7-11 12-16 18-16 5 0 9 3 20 16H25z" fill="#ff6b1a"/>
+            <path d="M52 28l6 8 9 2-7 5 2 8-8-5-8 5 3-8-7-5 9-2 1-8z" fill="#ffd06f"/>
+          </svg>
+          <div class="photo-copy">
+            <strong>Добавьте фото для акта</strong>
+            <span>Подойдут снимки сырья, разделки, полуфабриката или итоговой подачи.<br>Нажмите на область, чтобы выбрать изображения.</span>
+          </div>
+        </div>
+        <div id="photos-area" class="hidden"></div>
+      </div>
+
+      <input type="file" id="photo-input" accept="image/*" multiple hidden>
+      <div class="subtle">Фото будут отправлены в чат после заполнения формы.</div>
+    </section>
+
+    <section class="card highlight">
+      <div class="section-head">
+        <div>
+          <div class="section-tag"><span class="section-icon">06</span>Результат</div>
+          <h2 class="section-title">Решение по проработке</h2>
+        </div>
+        <div class="section-note">Ответственный и статус обязательны перед отправкой</div>
+      </div>
+      <div class="stack">
+        <div class="field">
+          <label>Ответственный <span class="required">*</span></label>
           <select id="responsible" class="field-input">
             <option value="">— выберите —</option>
             <option>Осин Е.А.</option>
@@ -276,10 +793,8 @@
             <option>Криволап А.</option>
           </select>
         </div>
-        <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">
-            Результат <span class="text-red-400">*</span>
-          </label>
+        <div class="field">
+          <label>Результат <span class="required">*</span></label>
           <select id="result" class="field-input">
             <option value="">— выберите —</option>
             <option>Одобрено</option>
@@ -288,178 +803,178 @@
             <option>В процессе</option>
           </select>
         </div>
-        <div>
-          <label class="text-xs font-medium text-[#a0a8c0] block mb-1">Заключение</label>
-          <textarea id="conclusion" rows="4"
-                    placeholder="Вывод о целесообразности введения в меню…"
-                    class="field-input"></textarea>
+        <div class="field">
+          <label>Заключение</label>
+          <textarea id="conclusion" rows="4" placeholder="Краткий вывод по качеству, экономике и целесообразности вывода в меню…" class="field-input"></textarea>
         </div>
       </div>
-    </div>
+    </section>
+  </div>
 
-  </div><!-- /container -->
-
-  <!-- ── КНОПКА СОЗДАТЬ АКТ ── -->
-  <div class="fixed bottom-0 left-0 right-0 bg-[#0f1117] border-t border-[#22d3ee]/20 p-4">
-    <div class="max-w-2xl mx-auto">
-      <button id="submit-btn" disabled
-              class="w-full h-14 bg-[#22d3ee] disabled:opacity-40 disabled:cursor-not-allowed
-                     hover:bg-[#22d3ee]/90 active:scale-[0.97] transition-all
-                     text-[#0f1117] font-semibold text-lg rounded-3xl
-                     flex items-center justify-center gap-3 shadow-lg shadow-[#22d3ee]/30">
-        <i class="fa-solid fa-file-export"></i>
+  <div class="sticky-bar">
+    <div class="sticky-inner">
+      <button id="submit-btn" class="submit-btn" disabled>
+        <span class="cta-icon">➜</span>
         <span>Создать акт</span>
       </button>
     </div>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
+    const tg = window.Telegram?.WebApp || null;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
 
-    // ── URL-параметры ─────────────────────────────────────────────────────
     const params = new URLSearchParams(window.location.search);
     const D = {
-      num:   params.get('num')   || '—',
-      sup:   params.get('sup')   || '—',
-      nom:   params.get('nom')   || '—',
-      art:   params.get('art')   || '—',
-      price: params.get('price') || '0',
-      unit:  params.get('unit')  || 'кг',
-      sla:   params.get('sla')   || '—',
-      row:   params.get('row')   || '',
+      num: params.get("num") || "—",
+      sup: params.get("sup") || "—",
+      nom: params.get("nom") || "—",
+      art: params.get("art") || "—",
+      price: params.get("price") || "0",
+      unit: params.get("unit") || "кг",
+      sla: params.get("sla") || "—",
+      row: params.get("row") || "",
     };
 
-    document.getElementById('h-num').textContent    = D.num;
-    document.getElementById('h-sla').textContent    = D.sla;
-    document.getElementById('inf-num').textContent  = D.num;
-    document.getElementById('inf-sup').textContent  = D.sup;
-    document.getElementById('inf-nom').textContent  = D.nom;
-    document.getElementById('inf-art').textContent  = D.art;
-    document.getElementById('inf-price').textContent = D.price + ' руб. / ' + D.unit;
-    document.getElementById('inf-sla').textContent  = D.sla;
+    document.getElementById("h-num").textContent = D.num;
+    document.getElementById("h-sla").textContent = D.sla;
+    document.getElementById("inf-num").textContent = D.num;
+    document.getElementById("inf-sup").textContent = D.sup;
+    document.getElementById("inf-nom").textContent = D.nom;
+    document.getElementById("inf-art").textContent = D.art;
+    document.getElementById("inf-price").textContent = `${D.price} руб. / ${D.unit}`;
+    document.getElementById("inf-sla").textContent = D.sla;
+    document.getElementById("prod_date").value = new Date().toISOString().slice(0, 10);
 
-    // Дата производства — сегодня по умолчанию
-    document.getElementById('prod_date').value = new Date().toISOString().slice(0, 10);
-
-    // ── Утилиты ───────────────────────────────────────────────────────────
     function fv(id) {
-      const v = parseFloat(document.getElementById(id).value.replace(',', '.'));
-      return isNaN(v) || v <= 0 ? null : v;
+      const raw = document.getElementById(id).value;
+      const value = parseFloat(String(raw).replace(",", "."));
+      return Number.isFinite(value) && value > 0 ? value : null;
     }
+
     function pct(from, to) {
       if (!from || !to || from <= 0) return null;
-      return ((from - to) / from * 100).toFixed(1) + '%';
-    }
-    function formatDate(val) {
-      if (!val) return '';
-      const [y, m, d] = val.split('-');
-      return `${d}.${m}.${y}`;
+      return (((from - to) / from) * 100).toFixed(1) + "%";
     }
 
-    // ── Расчёт в реальном времени ─────────────────────────────────────────
-    const calcBox = document.getElementById('calc-box');
+    function formatDate(value) {
+      if (!value) return "";
+      const [year, month, day] = value.split("-");
+      return `${day}.${month}.${year}`;
+    }
+
+    const calcBox = document.getElementById("calc-box");
 
     function recalc() {
-      const mm       = fv('massa_mark');
-      const pf       = fv('pf_massa');
-      const rawPrice = parseFloat(D.price.replace(',', '.').replace(/\s/g, '')) || 0;
-      const finalMass = fv('termo') || pf || fv('zachistka') || fv('defrost') || fv('peretarka');
-      const lossPct   = pct(mm, finalMass);
-      const koef      = (mm && pf && pf > 0) ? (mm / pf).toFixed(4) : null;
-      const pricePf   = (koef && rawPrice) ? (rawPrice * parseFloat(koef)).toFixed(2) + ' руб.' : '—';
+      const massaMark = fv("massa_mark");
+      const pfMass = fv("pf_massa");
+      const rawPrice = parseFloat(String(D.price).replace(",", ".").replace(/\s/g, "")) || 0;
+      const finalMass = fv("termo") || pfMass || fv("zachistka") || fv("defrost") || fv("peretarka");
+      const lossPct = pct(massaMark, finalMass);
+      const koef = massaMark && pfMass ? (massaMark / pfMass).toFixed(4) : null;
+      const pricePf = koef && rawPrice ? (rawPrice * parseFloat(koef)).toFixed(2) + " руб." : "—";
 
       if (lossPct || koef) {
-        calcBox.classList.add('visible');
-        document.getElementById('c-loss').textContent  = lossPct || '—';
-        document.getElementById('c-koef').textContent  = koef    || '—';
-        document.getElementById('c-price').textContent = pricePf;
+        calcBox.classList.add("visible");
+        document.getElementById("c-loss").textContent = lossPct || "—";
+        document.getElementById("c-koef").textContent = koef || "—";
+        document.getElementById("c-price").textContent = pricePf;
       } else {
-        calcBox.classList.remove('visible');
+        calcBox.classList.remove("visible");
       }
+
       validateForm();
     }
 
-    ['massa_mark','peretarka','defrost','zachistka','pf_massa','termo'].forEach(id =>
-      document.getElementById(id).addEventListener('input', recalc)
-    );
+    ["massa_mark", "peretarka", "defrost", "zachistka", "pf_massa", "termo"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", recalc);
+    });
 
-    // ── Валидация ─────────────────────────────────────────────────────────
     function validateForm() {
-      const ok = fv('massa_mark') &&
-                 document.getElementById('responsible').value &&
-                 document.getElementById('result').value;
-      document.getElementById('submit-btn').disabled = !ok;
+      const isValid = fv("massa_mark") &&
+        document.getElementById("responsible").value &&
+        document.getElementById("result").value;
+      document.getElementById("submit-btn").disabled = !isValid;
     }
-    ['responsible','result','marking'].forEach(id =>
-      document.getElementById(id).addEventListener('change', validateForm)
-    );
 
-    // ── Фото ──────────────────────────────────────────────────────────────
-    const photoInput      = document.getElementById('photo-input');
-    const photosArea      = document.getElementById('photos-area');
-    const dropPlaceholder = document.getElementById('drop-placeholder');
-    const photoFiles      = [];
+    ["responsible", "result", "marking"].forEach((id) => {
+      document.getElementById(id).addEventListener("change", validateForm);
+    });
 
-    photoInput.addEventListener('change', () => {
+    const photoInput = document.getElementById("photo-input");
+    const photosArea = document.getElementById("photos-area");
+    const dropPlaceholder = document.getElementById("drop-placeholder");
+    const photoFiles = [];
+
+    photoInput.addEventListener("change", () => {
       for (const file of photoInput.files) {
         photoFiles.push(file);
-        const img = document.createElement('img');
-        img.className = 'photo-thumb';
+        const img = document.createElement("img");
+        img.className = "photo-thumb";
         img.src = URL.createObjectURL(file);
         photosArea.appendChild(img);
       }
-      photoInput.value = '';
+
+      photoInput.value = "";
+
       if (photoFiles.length > 0) {
-        dropPlaceholder.classList.add('hidden');
-        photosArea.classList.remove('hidden');
+        dropPlaceholder.classList.add("hidden");
+        photosArea.classList.remove("hidden");
       }
     });
 
-    // ── Отправка ──────────────────────────────────────────────────────────
-    document.getElementById('submit-btn').addEventListener('click', () => {
-      const btn = document.getElementById('submit-btn');
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      const btn = document.getElementById("submit-btn");
       btn.disabled = true;
-      btn.innerHTML = `<svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>`;
+      btn.innerHTML = `
+        <svg class="spin" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+          <style>.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
+          <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,.25)" stroke-width="4" fill="none"></circle>
+          <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none"></path>
+        </svg>
+      `;
 
-      const mm       = fv('massa_mark');
-      const pf       = fv('pf_massa');
-      const rawP     = parseFloat(D.price.replace(',', '.').replace(/\s/g, '')) || 0;
-      const koef     = (mm && pf && pf > 0) ? parseFloat((mm / pf).toFixed(4)) : null;
-      const pricePf  = (koef && rawP) ? parseFloat((rawP * koef).toFixed(2)) : null;
-      const finalMass = fv('termo') || pf || fv('zachistka') || fv('defrost') || fv('peretarka');
+      const massaMark = fv("massa_mark");
+      const pfMass = fv("pf_massa");
+      const rawPrice = parseFloat(String(D.price).replace(",", ".").replace(/\s/g, "")) || 0;
+      const koef = massaMark && pfMass ? parseFloat((massaMark / pfMass).toFixed(4)) : null;
+      const pricePf = koef && rawPrice ? parseFloat((rawPrice * koef).toFixed(2)) : null;
+      const finalMass = fv("termo") || pfMass || fv("zachistka") || fv("defrost") || fv("peretarka");
 
       const payload = {
-        row:          D.row,
-        num:          D.num,
-        sup:          D.sup,
-        nom:          D.nom,
-        art:          D.art,
-        price:        D.price,
-        unit:         D.unit,
-        sla:          D.sla,
-        massa_mark:   String(mm || ''),
-        prod_date:    formatDate(document.getElementById('prod_date').value),
-        peretarka:    String(fv('peretarka') || ''),
-        defrost:      String(fv('defrost')   || ''),
-        zachistka:    String(fv('zachistka') || ''),
-        pf_massa:     String(pf  || ''),
-        termo:        String(fv('termo')     || ''),
-        koef:         koef    ? String(koef)    : '',
-        price_pf:     pricePf ? String(pricePf) : '',
-        loss_pct:     (finalMass && mm) ? String(((mm - finalMass) / mm * 100).toFixed(1)) : '',
-        marking:      document.getElementById('marking').value,
-        responsible:  document.getElementById('responsible').value,
-        result:       document.getElementById('result').value,
-        conclusion:   document.getElementById('conclusion').value.trim(),
+        row: D.row,
+        num: D.num,
+        sup: D.sup,
+        nom: D.nom,
+        art: D.art,
+        price: D.price,
+        unit: D.unit,
+        sla: D.sla,
+        massa_mark: String(massaMark || ""),
+        prod_date: formatDate(document.getElementById("prod_date").value),
+        peretarka: String(fv("peretarka") || ""),
+        defrost: String(fv("defrost") || ""),
+        zachistka: String(fv("zachistka") || ""),
+        pf_massa: String(pfMass || ""),
+        termo: String(fv("termo") || ""),
+        koef: koef ? String(koef) : "",
+        price_pf: pricePf ? String(pricePf) : "",
+        loss_pct: finalMass && massaMark ? String((((massaMark - finalMass) / massaMark) * 100).toFixed(1)) : "",
+        marking: document.getElementById("marking").value,
+        responsible: document.getElementById("responsible").value,
+        result: document.getElementById("result").value,
+        conclusion: document.getElementById("conclusion").value.trim(),
         photos_count: String(photoFiles.length),
       };
 
-      tg.sendData(JSON.stringify(payload));
+      if (tg) {
+        tg.sendData(JSON.stringify(payload));
+      } else {
+        alert("Откройте приложение через Telegram.");
+      }
     });
   </script>
 </body>
